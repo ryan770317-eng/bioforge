@@ -128,11 +128,16 @@ export default function TodayPage() {
   }
 
   async function upsert(fields: LogFields, rollback?: () => void) {
+    const payload = { date: todayDate(), ...fields };
+    console.log("[upsert] payload:", JSON.stringify(payload));
     saveCount.current += 1;
     setSaving(true);
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("daily_logs")
-      .upsert({ date: todayDate(), ...fields }, { onConflict: "date" });
+      .upsert(payload, { onConflict: "date" })
+      .select();
+    console.log("[upsert] data:", JSON.stringify(data));
+    if (error) console.error("[upsert] Supabase error:", JSON.stringify(error));
     saveCount.current -= 1;
     if (saveCount.current === 0) setSaving(false);
     if (error) {
