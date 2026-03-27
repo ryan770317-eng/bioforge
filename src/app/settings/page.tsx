@@ -59,7 +59,7 @@ function HealthCard({ label, value, unit, sub, color, onApply }: {
       {onApply && (
         <button
           onClick={onApply}
-          className="mt-1 self-start text-[10px] font-medium text-[#D4A24E] border border-[#D4A24E] rounded-full px-2 py-0.5 active:opacity-70 transition-opacity"
+          className="mt-1 self-start text-[10px] font-medium text-[#1a1a1a] border border-[#e9f955] rounded-full px-2 py-0.5 active:opacity-70 transition-opacity"
         >
           套用建議值
         </button>
@@ -171,13 +171,13 @@ export default function SettingsPage() {
   const recWater    = hasMetrics ? calcWater(w) : null;
   const tdee        = hasMetrics ? calcTDEE(h, w) : null;
 
-  const inputCls = "border border-stone-200 rounded-xl px-4 py-3 w-full bg-white text-stone-800 placeholder:text-stone-300 focus:outline-none focus:border-[#D4A24E] text-sm transition-colors";
+  const inputCls = "border border-stone-200 rounded-xl px-4 py-3 w-full bg-white text-stone-800 placeholder:text-stone-300 focus:outline-none focus:border-[#e9f955] text-sm transition-colors";
 
   return (
     <>
-      <div className="fixed top-0 left-0 right-0 md:left-[200px] z-10 bg-[#FFF8F0] px-4 pt-4 pb-3 border-b border-stone-100">
+      <div className="fixed top-0 left-0 right-0 md:left-[200px] z-10 bg-[#ebebeb] px-4 pt-4 pb-3 border-b border-stone-100">
         <div className="max-w-2xl mx-auto flex items-baseline justify-between">
-          <h1 className="text-xl font-bold text-[#D4A24E]">設定</h1>
+          <h1 className="text-xl font-bold text-[#1a1a1a]">設定</h1>
           {saved && <span className="text-xs text-[#6B9E78] font-medium">✅ 已儲存</span>}
         </div>
       </div>
@@ -251,7 +251,7 @@ export default function SettingsPage() {
             onClick={save}
             disabled={saving}
             className="mt-3 w-full py-2.5 rounded-full text-sm font-semibold text-white transition-opacity active:opacity-80"
-            style={{ backgroundColor: "#D4A24E", opacity: saving ? 0.6 : 1 }}
+            style={{ backgroundColor: "#e9f955", color: "#1a1a1a", opacity: saving ? 0.6 : 1 }}
           >
             {saving ? "儲存中…" : "儲存個人資料"}
           </button>
@@ -290,7 +290,7 @@ export default function SettingsPage() {
                 value={String(tdee)}
                 unit="kcal"
                 sub="久坐係數 1.2，僅供參考"
-                color="#D4A24E"
+                color="#e9f955"
               />
             </div>
           </section>
@@ -308,7 +308,7 @@ export default function SettingsPage() {
                     type="date"
                     value={item.banUntil}
                     onChange={(e) => updateBanDate(i, e.target.value)}
-                    className="text-sm text-[#D4A24E] outline-none bg-transparent"
+                    className="text-sm text-[#1a1a1a] outline-none bg-transparent"
                   />
                 ) : (
                   <span className="text-xs font-medium text-[#E8734A] bg-[#FDECEA] px-2.5 py-0.5 rounded-full">永久停食</span>
@@ -332,7 +332,7 @@ export default function SettingsPage() {
                   checked={breakfastEnabled}
                   onChange={(e) => handleBreakfastEnabled(e.target.checked)}
                 />
-                <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-[#D4A24E] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-[#e9f955] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
               </label>
             </div>
             <div className="flex items-center justify-between px-4 py-3">
@@ -341,7 +341,7 @@ export default function SettingsPage() {
                 type="time"
                 value={breakfastTime}
                 onChange={(e) => handleBreakfastTime(e.target.value)}
-                className="text-sm text-[#D4A24E] outline-none bg-transparent"
+                className="text-sm text-[#1a1a1a] outline-none bg-transparent"
               />
             </div>
             <div className="flex items-center justify-between px-4 py-3">
@@ -353,7 +353,7 @@ export default function SettingsPage() {
                   checked={dinnerEnabled}
                   onChange={(e) => handleDinnerEnabled(e.target.checked)}
                 />
-                <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-[#D4A24E] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+                <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-[#e9f955] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
               </label>
             </div>
             <div className="flex items-center justify-between px-4 py-3">
@@ -362,7 +362,7 @@ export default function SettingsPage() {
                 type="time"
                 value={dinnerTime}
                 onChange={(e) => handleDinnerTime(e.target.value)}
-                className="text-sm text-[#D4A24E] outline-none bg-transparent"
+                className="text-sm text-[#1a1a1a] outline-none bg-transparent"
               />
             </div>
           </div>
@@ -370,7 +370,7 @@ export default function SettingsPage() {
 
         {/* About */}
         <section>
-          <h2 className="text-xs font-semibold text-[#8B7D6B] uppercase tracking-wide mb-2 px-1">關於 BioForge</h2>
+          <h2 className="text-xs font-semibold text-[#8B7D6B] uppercase tracking-wide mb-2 px-1">關於 BioHACKING</h2>
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden divide-y divide-stone-50">
             <div className="flex items-center justify-between px-4 py-3">
               <span className="text-sm text-[#1A1A1A] font-medium">版本</span>

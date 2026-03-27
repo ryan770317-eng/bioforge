@@ -128,9 +128,9 @@ export default function SosPage() {
   return (
     <>
       {/* Fixed header */}
-      <div className="fixed top-0 left-0 right-0 md:left-[200px] z-10 bg-[#FFF8F0] px-4 pt-4 pb-3 border-b border-stone-100">
+      <div className="fixed top-0 left-0 right-0 md:left-[200px] z-10 bg-[#ebebeb] px-4 pt-4 pb-3 border-b border-stone-100">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-[#D4A24E]">🆘 渴望急救</h1>
+          <h1 className="text-xl font-bold text-[#1a1a1a]">🆘 渴望急救</h1>
           {/* Step indicator */}
           <div className="flex gap-2 items-center">
             {[1, 2, 3, 4].map((s) => (
@@ -139,7 +139,7 @@ export default function SosPage() {
                 className="rounded-full transition-all duration-300"
                 style={{
                   width: 8, height: 8,
-                  backgroundColor: s < step ? "#6B9E78" : s === step ? "#D4A24E" : "#E7E0D8",
+                  backgroundColor: s < step ? "#6B9E78" : s === step ? "#e9f955" : "#E7E0D8",
                 }}
               />
             ))}
@@ -171,7 +171,7 @@ export default function SosPage() {
                   <circle
                     cx="50" cy="50" r="44"
                     fill="none"
-                    stroke={timerDone ? "#6B9E78" : "#D4A24E"}
+                    stroke={timerDone ? "#6B9E78" : "#e9f955"}
                     strokeWidth="7"
                     strokeLinecap="round"
                     strokeDasharray={CIRCUMFERENCE}
@@ -183,7 +183,7 @@ export default function SosPage() {
                   {timerDone ? (
                     <span className="text-4xl text-[#6B9E78]">✓</span>
                   ) : (
-                    <span className="font-bold tabular-nums text-[#D4A24E]" style={{ fontSize: 36 }}>
+                    <span className="font-bold tabular-nums text-[#1a1a1a]" style={{ fontSize: 36 }}>
                       {formatTime(timeLeft)}
                     </span>
                   )}
@@ -202,7 +202,7 @@ export default function SosPage() {
                   <button
                     onClick={() => setTimerRunning((v) => !v)}
                     className="px-6 py-2.5 rounded-full text-sm font-semibold text-white active:opacity-80 transition-opacity"
-                    style={{ backgroundColor: timerRunning ? "#E8734A" : "#D4A24E" }}
+                    style={{ backgroundColor: timerRunning ? "#E8734A" : "#e9f955" }}
                   >
                     {timerRunning ? "暫停" : timeLeft === TIMER_SECONDS ? "開始計時" : "繼續"}
                   </button>
@@ -256,7 +256,7 @@ export default function SosPage() {
 
             <button
               onClick={() => setStep(3)}
-              className="w-full py-2.5 rounded-full text-sm font-semibold text-white bg-[#D4A24E] active:opacity-80 transition-opacity"
+              className="w-full py-2.5 rounded-full text-sm font-semibold text-[#1a1a1a] bg-[#e9f955] active:opacity-80 transition-opacity"
             >
               {selectedSnacks.size > 0 ? "吃了，繼續 →" : "跳過，繼續 →"}
             </button>
@@ -315,7 +315,7 @@ export default function SosPage() {
 
             <button
               onClick={finishAndLog}
-              className="w-full py-2.5 rounded-full text-sm font-semibold text-white bg-[#D4A24E] active:opacity-80 transition-opacity"
+              className="w-full py-2.5 rounded-full text-sm font-semibold text-[#1a1a1a] bg-[#e9f955] active:opacity-80 transition-opacity"
             >
               完成紀錄 →
             </button>
@@ -333,7 +333,7 @@ export default function SosPage() {
             </p>
 
             {/* Summary card */}
-            <div className="bg-[#FFF8F0] rounded-2xl px-4 py-3 text-left space-y-2 mb-6">
+            <div className="bg-[#ebebeb] rounded-2xl px-4 py-3 text-left space-y-2 mb-6">
               <div className="flex items-center gap-2 text-xs text-[#8B7D6B]">
                 <span>💧</span>
                 <span>喝了 300ml 水，等了 5 分鐘</span>

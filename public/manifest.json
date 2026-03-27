@@ -1,9 +1,9 @@
 {
-  "name": "BioForge",
-  "short_name": "BioForge",
+  "name": "BioHACKING",
+  "short_name": "BioHACKING",
   "description": "智慧健康管理，從飲食開始",
-  "theme_color": "#D4A24E",
-  "background_color": "#FFF8F0",
+  "theme_color": "#e9f955",
+  "background_color": "#ebebeb",
   "display": "standalone",
   "orientation": "portrait",
   "start_url": "/scan",

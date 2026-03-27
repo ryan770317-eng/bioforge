@@ -51,7 +51,7 @@ export function scheduleBreakfast(time = "08:00"): void {
   const { hour, minute } = parseTime(time);
   breakfastTimer = setTimeout(
     () => fireAndReschedule(
-      "🌅 早餐時間！記得吃保健品 💊", "BioForge 提醒",
+      "🌅 早餐時間！記得吃保健品 💊", "BioHACKING 提醒",
       hour, minute,
       (t) => { breakfastTimer = t; }
     ),
@@ -65,7 +65,7 @@ export function scheduleDinner(time = "18:30"): void {
   const { hour, minute } = parseTime(time);
   dinnerTimer = setTimeout(
     () => fireAndReschedule(
-      "🌙 晚餐時間！SpectraZyme 記得餐前吃", "BioForge 提醒",
+      "🌙 晚餐時間！SpectraZyme 記得餐前吃", "BioHACKING 提醒",
       hour, minute,
       (t) => { dinnerTimer = t; }
     ),

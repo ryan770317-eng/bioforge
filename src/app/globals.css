@@ -1,25 +1,28 @@
 @import "tailwindcss";
 
 :root {
-  --background: #FFF8F0;
-  --foreground: #1A1A1A;
-  --gold: #D4A24E;
-  --green: #6B9E78;
-  --orange: #E8734A;
-  --radius: 16px;
+  --bg:          #ebebeb;
+  --primary:     #e9f955;
+  --card:        #ffffff;
+  --text:        #1a1a1a;
+  --text-muted:  #6b6b6b;
+  --radius:      16px;
+  --green:       #6B9E78;
+  --red:         #E8734A;
+  --gold:        #D4A24E;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-gold: var(--gold);
-  --color-green: var(--green);
-  --color-orange: var(--orange);
-  --font-sans: var(--font-noto-sans-tc);
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+  --color-primary:    var(--primary);
+  --color-green:      var(--green);
+  --color-red:        var(--red);
+  --font-sans:        var(--font-noto-sans-tc);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--bg);
+  color: var(--text);
   font-family: var(--font-noto-sans-tc), "Noto Sans TC", sans-serif;
 }

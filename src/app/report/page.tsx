@@ -152,10 +152,10 @@ export default function ReportPage() {
 
   return (
     <>
-      <div className="fixed top-0 left-0 right-0 md:left-[200px] z-10 bg-[#FFF8F0] px-4 pt-4 pb-3 border-b border-stone-100">
+      <div className="fixed top-0 left-0 right-0 md:left-[200px] z-10 bg-[#ebebeb] px-4 pt-4 pb-3 border-b border-stone-100">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-baseline justify-between mb-3">
-            <h1 className="text-xl font-bold text-[#D4A24E]">週報</h1>
+            <h1 className="text-xl font-bold text-[#1a1a1a]">週報</h1>
             <span className="text-xs text-[#8B7D6B]">{dateRangeLabel(period)}</span>
           </div>
           <div className="flex gap-2">
@@ -163,7 +163,7 @@ export default function ReportPage() {
               <button key={p} onClick={() => setPeriod(p)}
                 className="text-xs font-medium px-4 py-1.5 rounded-full transition-colors"
                 style={period === p
-                  ? { backgroundColor: "#D4A24E", color: "#fff" }
+                  ? { backgroundColor: "#e9f955", color: "#1a1a1a" }
                   : { backgroundColor: "#fff", color: "#8B7D6B", border: "1px solid #F0EBE4" }}
               >{p} 天</button>
             ))}
@@ -176,7 +176,7 @@ export default function ReportPage() {
         {loading ? (
           <div className="flex flex-col items-center justify-center pt-20 gap-3">
             <div className="w-7 h-7 rounded-full animate-spin"
-              style={{ border: "3px solid #F5E6CC", borderTopColor: "#D4A24E" }} />
+              style={{ border: "3px solid #F5E6CC", borderTopColor: "#e9f955" }} />
             <p className="text-xs text-[#8B7D6B]">載入資料中…</p>
           </div>
         ) : (
@@ -194,7 +194,7 @@ export default function ReportPage() {
                 />
                 <MetricCard
                   label="平均蛋白質" value={`${metrics.protein} g`}
-                  sub="目標 105 g" color="#D4A24E" barColor="#6B9E78"
+                  sub="目標 105 g" color="#e9f955" barColor="#6B9E78"
                   pct={metrics.protein / 105}
                 />
                 <MetricCard
@@ -205,7 +205,7 @@ export default function ReportPage() {
                   label="下午精神"
                   value={metrics.energy !== null ? `${metrics.energy} / 5` : "—"}
                   sub={metrics.energy !== null ? "平均評分" : "尚無資料"}
-                  color="#D4A24E" barColor="#D4A24E"
+                  color="#e9f955" barColor="#e9f955"
                   pct={metrics.energy !== null ? metrics.energy / 5 : null}
                 />
               </div>
@@ -226,7 +226,7 @@ export default function ReportPage() {
                           <div className="w-full rounded-t-md transition-all"
                             style={{
                               height: ml > 0 ? `${pct * 100}%` : "3px",
-                              backgroundColor: isToday ? "#D4A24E" : reached ? "#6B9E78" : ml > 0 ? "#D4A24E4D" : "#F0EBE4",
+                              backgroundColor: isToday ? "#e9f955" : reached ? "#6B9E78" : ml > 0 ? "#D4A24E4D" : "#F0EBE4",
                             }}
                           />
                         </div>
@@ -240,7 +240,7 @@ export default function ReportPage() {
                   <span className="text-[9px] text-[#8B7D6B]">目標 {WATER_GOAL} ml</span>
                 </div>
                 <div className="flex gap-4 mt-2 px-0.5">
-                  {[["#6B9E78","達標"],["#D4A24E","今天"],["#D4A24E4D","未達標"]].map(([c,l]) => (
+                  {[["#6B9E78","達標"],["#e9f955","今天"],["#D4A24E4D","未達標"]].map(([c,l]) => (
                     <div key={l} className="flex items-center gap-1">
                       <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: c }} />
                       <span className="text-[9px] text-[#8B7D6B]">{l}</span>
@@ -328,14 +328,14 @@ export default function ReportPage() {
                           </p>
                         </div>
                         <div className="text-right">
-                          <span className="text-2xl font-bold text-[#D4A24E]">{elapsed}</span>
+                          <span className="text-2xl font-bold text-[#1a1a1a]">{elapsed}</span>
                           <span className="text-xs text-[#8B7D6B] ml-0.5">天</span>
                         </div>
                       </div>
                       {pct !== null && (
                         <div className="mt-2">
                           <div className="h-1.5 bg-stone-100 rounded-full overflow-hidden">
-                            <div className="h-full rounded-full bg-[#D4A24E] transition-all"
+                            <div className="h-full rounded-full bg-[#e9f955] transition-all"
                               style={{ width: `${pct * 100}%` }} />
                           </div>
                           <p className="text-[9px] text-[#8B7D6B] mt-0.5 text-right">

@@ -204,11 +204,11 @@ export default function TodayPage() {
         </div>
       )}
 
-      <div className="fixed top-0 left-0 right-0 md:left-[200px] z-10 bg-[#FFF8F0] px-4 pt-4 pb-3 border-b border-stone-100">
+      <div className="fixed top-0 left-0 right-0 md:left-[200px] z-10 bg-[#ebebeb] px-4 pt-4 pb-3 border-b border-stone-100">
         <div className="max-w-2xl mx-auto flex items-baseline justify-between">
-          <h1 className="text-xl font-bold text-[#D4A24E]">今日打卡</h1>
+          <h1 className="text-xl font-bold text-[#1a1a1a]">今日打卡</h1>
           <div className="flex items-center gap-2">
-            {saving && <div className="w-1.5 h-1.5 rounded-full bg-[#D4A24E] animate-pulse" />}
+            {saving && <div className="w-1.5 h-1.5 rounded-full bg-[#e9f955] animate-pulse" />}
             <span className="text-xs text-[#8B7D6B]">{todayLabel()}</span>
           </div>
         </div>
@@ -257,7 +257,7 @@ export default function TodayPage() {
               <button
                 key={label}
                 onClick={() => addProtein(g)}
-                className="text-xs font-medium px-3 py-1.5 rounded-full bg-[#FFF3E0] text-[#D4A24E] active:scale-95 transition-transform"
+                className="text-xs font-medium px-3 py-1.5 rounded-full bg-[#FFF3E0] text-[#1a1a1a] active:scale-95 transition-transform"
               >
                 {label} <span className="opacity-70">+{g}g</span>
               </button>
@@ -271,9 +271,9 @@ export default function TodayPage() {
               value={customG}
               onChange={(e) => setCustomG(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && submitCustom()}
-              className="flex-1 bg-stone-50 rounded-xl px-3 py-2 text-sm outline-none border border-stone-100 focus:border-[#D4A24E] transition-colors placeholder:text-[#C4B8AC]"
+              className="flex-1 bg-stone-50 rounded-xl px-3 py-2 text-sm outline-none border border-stone-100 focus:border-[#e9f955] transition-colors placeholder:text-[#C4B8AC]"
             />
-            <button onClick={submitCustom} className="px-4 py-2 rounded-xl bg-[#D4A24E] text-white text-sm font-medium active:opacity-80 transition-opacity">加入</button>
+            <button onClick={submitCustom} className="px-4 py-2 rounded-xl bg-[#e9f955] text-white text-sm font-medium active:opacity-80 transition-opacity">加入</button>
           </div>
           {protein > 0 && (
             <button onClick={() => handleProtein(0)} className="mt-2 text-xs text-[#8B7D6B]/60 underline">重置</button>
@@ -313,7 +313,7 @@ export default function TodayPage() {
                   <span className="text-sm text-[#1A1A1A]">☀️ 下午精神</span>
                   <span className="text-xs text-[#8B7D6B]">{energy ? `${energy} 分` : "未填"}</span>
                 </div>
-                <RatingDots value={energy} onChange={handleEnergy} activeColor="#D4A24E" />
+                <RatingDots value={energy} onChange={handleEnergy} activeColor="#e9f955" />
               </div>
               <div>
                 <div className="flex items-baseline justify-between mb-2">

@@ -82,9 +82,9 @@ export default function SupplementsPage() {
   return (
     <>
       {/* Fixed header */}
-      <div className="fixed top-0 left-0 right-0 md:left-[200px] z-10 bg-[#FFF8F0] px-4 pt-4 pb-3 border-b border-stone-100">
+      <div className="fixed top-0 left-0 right-0 md:left-[200px] z-10 bg-[#ebebeb] px-4 pt-4 pb-3 border-b border-stone-100">
         <div className="flex items-baseline justify-between">
-          <h1 className="text-xl font-bold text-[#D4A24E]">保健品</h1>
+          <h1 className="text-xl font-bold text-[#1a1a1a]">保健品</h1>
           <span className="text-xs text-[#8B7D6B]">{todayLabel()}</span>
         </div>
       </div>
@@ -115,11 +115,11 @@ export default function SupplementsPage() {
                       <button
                         onClick={() => toggle(item.id)}
                         aria-label={done ? "取消勾選" : "勾選"}
-                        className={`mt-0.5 shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${done ? "bg-[#D4A24E] border-[#D4A24E]" : "border-stone-200 bg-white"}`}
+                        className={`mt-0.5 shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${done ? "bg-[#e9f955] border-[#e9f955]" : "border-stone-200 bg-white"}`}
                       >
                         {done && (
                           <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
-                            <path d="M1 5l3.5 3.5L11 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M1 5l3.5 3.5L11 1" stroke="#1a1a1a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                         )}
                       </button>
@@ -127,7 +127,7 @@ export default function SupplementsPage() {
                         <p className={`text-sm font-medium leading-snug ${done ? "text-[#8B7D6B] line-through decoration-[#8B7D6B]/50" : "text-[#1A1A1A]"}`}>
                           {item.name}
                         </p>
-                        <p className={`text-xs mt-0.5 ${done ? "text-[#8B7D6B]/60" : "text-[#D4A24E]"}`}>{item.dose}</p>
+                        <p className={`text-xs mt-0.5 ${done ? "text-[#8B7D6B]/60" : "text-[#1a1a1a]"}`}>{item.dose}</p>
                         <p className={`text-xs mt-0.5 ${done ? "text-[#8B7D6B]/60" : "text-[#8B7D6B]"}`}>{item.note}</p>
                       </div>
                     </li>

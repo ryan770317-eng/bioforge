@@ -74,7 +74,7 @@ const STATUS_ORDER: FoodStatus[] = ["banned", "rotation", "observe", "safe"];
 
 const STATUS_CONFIG: Record<FoodStatus, { label: string; bg: string; text: string }> = {
   safe:     { label: "✅ 安全", bg: "bg-[#EEF6F1]", text: "text-[#6B9E78]" },
-  rotation: { label: "🔄 輪替", bg: "bg-[#FFF3E0]", text: "text-[#D4A24E]" },
+  rotation: { label: "🔄 輪替", bg: "bg-[#FFF3E0]", text: "text-[#1a1a1a]" },
   observe:  { label: "⚠️ 觀察", bg: "bg-[#F5F0EB]", text: "text-[#8B7D6B]" },
   banned:   { label: "🚫 停食", bg: "bg-[#FDECEA]", text: "text-[#E8734A]" },
 };
@@ -165,10 +165,10 @@ export default function ScanPage() {
   return (
     <>
       {/* Fixed header */}
-      <div className="fixed top-0 left-0 right-0 md:left-[200px] z-10 bg-[#FFF8F0] px-4 pt-4 pb-2 border-b border-stone-100">
+      <div className="fixed top-0 left-0 right-0 md:left-[200px] z-10 bg-[#ebebeb] px-4 pt-4 pb-2 border-b border-stone-100">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-baseline justify-between mb-3">
-            <h1 className="text-xl font-bold text-[#D4A24E]">食物安全掃描器</h1>
+            <h1 className="text-xl font-bold text-[#1a1a1a]">食物安全掃描器</h1>
             <span className="text-xs text-[#8B7D6B]">{todayLabel()}</span>
           </div>
           <div className="flex gap-2 mb-3">
@@ -178,7 +178,7 @@ export default function ScanPage() {
                 onClick={() => setMode(m as Mode)}
                 className="flex-1 py-1.5 rounded-full text-xs font-semibold transition-colors"
                 style={mode === m
-                  ? { backgroundColor: "#D4A24E", color: "#fff" }
+                  ? { backgroundColor: "#e9f955", color: "#1a1a1a" }
                   : { backgroundColor: "#fff", color: "#8B7D6B", border: "1px solid #F0EBE4" }}
               >{label}</button>
             ))}
@@ -190,7 +190,7 @@ export default function ScanPage() {
                 placeholder="搜尋食物名稱…"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="w-full bg-white rounded-2xl px-4 py-2.5 text-sm outline-none border border-stone-100 focus:border-[#D4A24E] transition-colors placeholder:text-[#C4B8AC] mb-2.5"
+                className="w-full bg-white rounded-2xl px-4 py-2.5 text-sm outline-none border border-stone-100 focus:border-[#e9f955] transition-colors placeholder:text-[#C4B8AC] mb-2.5"
               />
               <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
                 {FILTER_TABS.map(({ key, label }) => (
@@ -198,7 +198,7 @@ export default function ScanPage() {
                     key={key}
                     onClick={() => setTab(key)}
                     className={`shrink-0 text-xs font-medium px-3 py-1 rounded-full transition-colors ${
-                      tab === key ? "bg-[#D4A24E] text-white" : "bg-white text-[#8B7D6B] border border-stone-100"
+                      tab === key ? "bg-[#e9f955] text-white" : "bg-white text-[#8B7D6B] border border-stone-100"
                     }`}
                   >{label}</button>
                 ))}
@@ -238,7 +238,7 @@ export default function ScanPage() {
                       </p>
                     )}
                     {food.status === "rotation" && food.rotationDays && (
-                      <p className="text-xs text-[#D4A24E] mt-0.5">每 {food.rotationDays} 天 1 次</p>
+                      <p className="text-xs text-[#1a1a1a] mt-0.5">每 {food.rotationDays} 天 1 次</p>
                     )}
                     {food.note && <p className="text-xs text-[#8B7D6B] mt-0.5">{food.note}</p>}
                   </li>
