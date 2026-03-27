@@ -130,7 +130,7 @@ export default function SosPage() {
       {/* Fixed header */}
       <div className="fixed top-0 left-0 right-0 md:left-[200px] z-10 bg-[#ebebeb] px-4 pt-4 pb-3 border-b border-stone-100">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-[#1a1a1a]">🆘 渴望急救</h1>
+          <h1 className="text-xl font-bold text-[#1a1a1a]">渴望急救</h1>
           {/* Step indicator */}
           <div className="flex gap-2 items-center">
             {[1, 2, 3, 4].map((s) => (

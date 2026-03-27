@@ -72,11 +72,11 @@ const FOOD_DATABASE: FoodItem[] = [
 
 const STATUS_ORDER: FoodStatus[] = ["banned", "rotation", "observe", "safe"];
 
-const STATUS_CONFIG: Record<FoodStatus, { label: string; bg: string; text: string }> = {
-  safe:     { label: "✅ 安全", bg: "bg-[#EEF6F1]", text: "text-[#6B9E78]" },
-  rotation: { label: "🔄 輪替", bg: "bg-[#FFF3E0]", text: "text-[#1a1a1a]" },
-  observe:  { label: "⚠️ 觀察", bg: "bg-[#F5F0EB]", text: "text-[#8B7D6B]" },
-  banned:   { label: "🚫 停食", bg: "bg-[#FDECEA]", text: "text-[#E8734A]" },
+const STATUS_CONFIG: Record<FoodStatus, { label: string; dot: string; text: string }> = {
+  safe:     { label: "安全",  dot: "#6B9E78", text: "#6B9E78" },
+  rotation: { label: "輪替",  dot: "#D4A24E", text: "#D4A24E" },
+  observe:  { label: "觀察",  dot: "#8B7D6B", text: "#8B7D6B" },
+  banned:   { label: "停食",  dot: "#E8734A", text: "#E8734A" },
 };
 
 function daysUntil(dateStr: string): number {
@@ -133,10 +133,10 @@ type FilterTab = "all" | FoodStatus;
 
 const FILTER_TABS: { key: FilterTab; label: string }[] = [
   { key: "all",      label: "全部" },
-  { key: "banned",   label: "🚫 停食" },
-  { key: "rotation", label: "🔄 輪替" },
-  { key: "observe",  label: "⚠️ 觀察" },
-  { key: "safe",     label: "✅ 安全" },
+  { key: "banned",   label: "停食" },
+  { key: "rotation", label: "輪替" },
+  { key: "observe",  label: "觀察" },
+  { key: "safe",     label: "安全" },
 ];
 
 function todayLabel(): string {
@@ -198,7 +198,7 @@ export default function ScanPage() {
                     key={key}
                     onClick={() => setTab(key)}
                     className={`shrink-0 text-xs font-medium px-3 py-1 rounded-full transition-colors ${
-                      tab === key ? "bg-[#e9f955] text-white" : "bg-white text-[#8B7D6B] border border-stone-100"
+                      tab === key ? "bg-[#e9f955] text-[#1a1a1a]" : "bg-transparent text-[#6b6b6b] border border-stone-200"
                     }`}
                   >{label}</button>
                 ))}
@@ -220,27 +220,27 @@ export default function ScanPage() {
               {filtered.map((food) => {
                 const cfg  = STATUS_CONFIG[food.status];
                 const days = food.banUntil ? daysUntil(food.banUntil) : null;
-                const cardBg =
-                  food.status === "safe"     ? "bg-[#6B9E7814]" :
-                  food.status === "banned"   ? "bg-[#E8734A14]" :
-                  food.status === "rotation" ? "bg-[#D4A24E14]" : "bg-white";
+                const infoText =
+                  food.status === "banned" && days !== null
+                    ? (days > 0 ? `還剩 ${days} 天` : "停食期已到")
+                    : food.status === "rotation" && food.rotationDays
+                    ? `每 ${food.rotationDays} 天 1 次`
+                    : null;
                 return (
-                  <li key={food.name} className={`rounded-2xl px-4 py-2.5 shadow-sm ${cardBg}`}>
+                  <li key={food.name} className="bg-white rounded-2xl px-4 py-3 shadow-sm">
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-medium text-[#1A1A1A]">{food.name}</span>
-                      <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full whitespace-nowrap ${cfg.bg} ${cfg.text}`}>
-                        {cfg.label}
+                      <span className="flex items-center gap-1.5 whitespace-nowrap">
+                        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: cfg.dot }} />
+                        <span className="text-xs font-medium" style={{ color: cfg.text }}>{cfg.label}</span>
                       </span>
                     </div>
-                    {food.status === "banned" && days !== null && (
-                      <p className={`text-xs mt-0.5 ${days > 0 ? "text-[#E8734A]" : "text-[#6B9E78]"}`}>
-                        {days > 0 ? `還剩 ${days} 天` : "停食期已到"}
-                      </p>
+                    {(infoText || food.note) && (
+                      <p className="text-sm text-stone-400 mt-0.5">{infoText ?? food.note}</p>
                     )}
-                    {food.status === "rotation" && food.rotationDays && (
-                      <p className="text-xs text-[#1a1a1a] mt-0.5">每 {food.rotationDays} 天 1 次</p>
+                    {infoText && food.note && (
+                      <p className="text-sm text-stone-400 mt-0.5">{food.note}</p>
                     )}
-                    {food.note && <p className="text-xs text-[#8B7D6B] mt-0.5">{food.note}</p>}
                   </li>
                 );
               })}

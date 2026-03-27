@@ -52,10 +52,9 @@ export default function BottomNav() {
       {/* ── Desktop side nav (hidden below md) ── */}
       <nav className="hidden md:flex fixed top-0 left-0 h-full w-[200px] bg-white border-r border-stone-200 flex-col pt-6 pb-8 z-50">
         {/* Logo */}
-        <div className="px-5 mb-8 flex items-center gap-2">
+        <div className="px-5 mb-8 flex items-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="BioHACKING" className="h-8 w-auto" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
-          <span className="text-base font-black text-[#1a1a1a] tracking-tight leading-none">BioHACKING</span>
+          <img src="/icon.png" alt="BioHACKING" className="h-10 w-auto" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
         </div>
 
         {/* Nav items */}
