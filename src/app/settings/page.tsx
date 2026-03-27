@@ -17,20 +17,44 @@ const INITIAL_BAN: BanItem[] = [
 ];
 
 const SETTING_KEYS = ["name","height_cm","weight_kg","protein_goal_g","water_goal_ml"] as const;
+const AGE = 38;
 
-function SettingRow({ label, value, onChange, type = "text" }: {
-  label: string; value: string; onChange: (v: string) => void; type?: "text" | "number";
+// ── Health metric calculations ─────────────────────────────────
+function calcBMI(heightCm: number, weightKg: number) {
+  const h = heightCm / 100;
+  const bmi = weightKg / (h * h);
+  let label = ""; let color = "";
+  if      (bmi < 18.5) { label = "過輕"; color = "#5B8CE8"; }
+  else if (bmi < 24)   { label = "正常"; color = "#6B9E78"; }
+  else if (bmi < 27)   { label = "過重"; color = "#E8734A"; }
+  else                 { label = "肥胖"; color = "#E8734A"; }
+  return { value: bmi.toFixed(1), label, color };
+}
+
+function calcProtein(weightKg: number) {
+  return Math.round(weightKg * 1.6);
+}
+
+function calcWater(weightKg: number) {
+  return Math.round(weightKg * 35);
+}
+
+function calcTDEE(heightCm: number, weightKg: number) {
+  const bmr = 10 * weightKg + 6.25 * heightCm - 5 * AGE + 5;
+  return Math.round(bmr * 1.2);
+}
+
+// ── Sub-components ─────────────────────────────────────────────
+function HealthCard({ label, value, unit, sub, color }: {
+  label: string; value: string; unit: string; sub: string; color: string;
 }) {
   return (
-    <div className="flex items-center justify-between px-4 py-3">
-      <span className="text-sm text-[#1A1A1A] shrink-0 mr-4">{label}</span>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        inputMode={type === "number" ? "numeric" : undefined}
-        className="text-sm text-[#D4A24E] text-right outline-none bg-transparent w-28 placeholder:text-[#C4B8AC]"
-      />
+    <div className="bg-white rounded-2xl shadow-sm px-4 py-3">
+      <p className="text-[10px] text-[#8B7D6B] mb-1">{label}</p>
+      <p className="text-lg font-bold leading-none" style={{ color }}>
+        {value}<span className="text-xs font-normal text-[#8B7D6B] ml-1">{unit}</span>
+      </p>
+      <p className="text-[10px] text-[#8B7D6B] mt-1 leading-snug">{sub}</p>
     </div>
   );
 }
@@ -52,7 +76,6 @@ export default function SettingsPage() {
   const [dinnerTime,       setDinnerTime]       = useState("18:30");
 
   useEffect(() => {
-    // Load personal data from Supabase
     supabase
       .from("user_settings")
       .select("key,value")
@@ -67,7 +90,6 @@ export default function SettingsPage() {
         if (map.has("water_goal_ml"))  setWaterGoal(map.get("water_goal_ml")!);
       });
 
-    // Load notification prefs from localStorage (clear old buggy values first)
     try {
       if (localStorage.getItem("notif_pref_v") !== "3") {
         ["notif_breakfast","notif_dinner","notif_breakfast_time","notif_dinner_time"].forEach(
@@ -98,7 +120,7 @@ export default function SettingsPage() {
     await supabase.from("user_settings").upsert(rows, { onConflict: "key" });
     setSaving(false);
     setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setTimeout(() => setSaved(false), 3000);
   }
 
   function updateBanDate(index: number, date: string) {
@@ -108,7 +130,7 @@ export default function SettingsPage() {
   function handleBreakfastEnabled(val: boolean) {
     setBreakfastEnabled(val);
     try { localStorage.setItem("notif_breakfast", String(val)); } catch {}
-    if (val) scheduleBreakfast(breakfastTime); else { /* timer cleared inside scheduleBreakfast on next enable */ }
+    if (val) scheduleBreakfast(breakfastTime);
   }
 
   function handleDinnerEnabled(val: boolean) {
@@ -129,12 +151,25 @@ export default function SettingsPage() {
     if (dinnerEnabled) scheduleDinner(val);
   }
 
+  // Compute health metrics (only when both height + weight are valid numbers)
+  const h = parseFloat(height);
+  const w = parseFloat(weight);
+  const pg = parseInt(proteinGoal, 10);
+  const hasMetrics = h > 0 && w > 0;
+
+  const bmi         = hasMetrics ? calcBMI(h, w) : null;
+  const recProtein  = hasMetrics ? calcProtein(w) : null;
+  const recWater    = hasMetrics ? calcWater(w) : null;
+  const tdee        = hasMetrics ? calcTDEE(h, w) : null;
+
+  const inputCls = "border border-stone-200 rounded-xl px-4 py-3 w-full bg-white text-stone-800 placeholder:text-stone-300 focus:outline-none focus:border-[#D4A24E] text-sm transition-colors";
+
   return (
     <>
       <div className="fixed top-0 left-0 right-0 md:left-[200px] z-10 bg-[#FFF8F0] px-4 pt-4 pb-3 border-b border-stone-100">
         <div className="max-w-2xl mx-auto flex items-baseline justify-between">
           <h1 className="text-xl font-bold text-[#D4A24E]">設定</h1>
-          {saved && <span className="text-xs text-[#6B9E78] font-medium">✓ 已儲存</span>}
+          {saved && <span className="text-xs text-[#6B9E78] font-medium">✅ 已儲存</span>}
         </div>
       </div>
 
@@ -142,13 +177,66 @@ export default function SettingsPage() {
 
         {/* Personal data */}
         <section>
-          <h2 className="text-xs font-semibold text-[#8B7D6B] uppercase tracking-wide mb-2 px-1">個人資料</h2>
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden divide-y divide-stone-50">
-            <SettingRow label="姓名"             value={name}        onChange={setName}        type="text"   />
-            <SettingRow label="身高 (cm)"         value={height}      onChange={setHeight}      type="number" />
-            <SettingRow label="體重 (kg)"         value={weight}      onChange={setWeight}      type="number" />
-            <SettingRow label="蛋白質目標 (g/日)" value={proteinGoal} onChange={setProteinGoal} type="number" />
-            <SettingRow label="飲水目標 (ml/日)"  value={waterGoal}   onChange={setWaterGoal}   type="number" />
+          <h2 className="text-xs font-semibold text-[#8B7D6B] uppercase tracking-wide mb-3 px-1">個人資料</h2>
+          <div className="space-y-2">
+            <div>
+              <label className="text-xs text-[#8B7D6B] mb-1 block px-1">姓名</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="請輸入姓名"
+                className={inputCls}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-xs text-[#8B7D6B] mb-1 block px-1">身高 (cm)</label>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  value={height}
+                  onChange={(e) => setHeight(e.target.value)}
+                  placeholder="175"
+                  className={inputCls}
+                />
+              </div>
+              <div>
+                <label className="text-xs text-[#8B7D6B] mb-1 block px-1">體重 (kg)</label>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  value={weight}
+                  onChange={(e) => setWeight(e.target.value)}
+                  placeholder="72"
+                  className={inputCls}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-xs text-[#8B7D6B] mb-1 block px-1">蛋白質目標 (g/日)</label>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  value={proteinGoal}
+                  onChange={(e) => setProteinGoal(e.target.value)}
+                  placeholder="105"
+                  className={inputCls}
+                />
+              </div>
+              <div>
+                <label className="text-xs text-[#8B7D6B] mb-1 block px-1">飲水目標 (ml/日)</label>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  value={waterGoal}
+                  onChange={(e) => setWaterGoal(e.target.value)}
+                  placeholder="2000"
+                  className={inputCls}
+                />
+              </div>
+            </div>
           </div>
           <button
             onClick={save}
@@ -159,6 +247,43 @@ export default function SettingsPage() {
             {saving ? "儲存中…" : "儲存個人資料"}
           </button>
         </section>
+
+        {/* Health metrics (show when height + weight available) */}
+        {hasMetrics && bmi && recProtein && recWater && tdee && (
+          <section>
+            <h2 className="text-xs font-semibold text-[#8B7D6B] uppercase tracking-wide mb-3 px-1">個人化健康指標</h2>
+            <div className="grid grid-cols-2 gap-2">
+              <HealthCard
+                label="BMI"
+                value={bmi.value}
+                unit={bmi.label}
+                sub={`正常範圍 18.5 – 24`}
+                color={bmi.color}
+              />
+              <HealthCard
+                label="每日蛋白質建議"
+                value={String(recProtein)}
+                unit="g"
+                sub={`體重 × 1.6g｜你的目標 ${isNaN(pg) ? proteinGoal : pg}g`}
+                color={!isNaN(pg) && pg >= recProtein ? "#6B9E78" : "#E8734A"}
+              />
+              <HealthCard
+                label="每日飲水建議"
+                value={String(recWater)}
+                unit="ml"
+                sub={`體重 × 35ml`}
+                color="#5B8CE8"
+              />
+              <HealthCard
+                label="TDEE 參考"
+                value={String(tdee)}
+                unit="kcal"
+                sub="久坐係數 1.2，僅供參考"
+                color="#D4A24E"
+              />
+            </div>
+          </section>
+        )}
 
         {/* Ban dates */}
         <section>
@@ -187,8 +312,6 @@ export default function SettingsPage() {
         <section>
           <h2 className="text-xs font-semibold text-[#8B7D6B] uppercase tracking-wide mb-2 px-1">推播通知</h2>
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden divide-y divide-stone-50">
-
-            {/* Breakfast toggle */}
             <div className="flex items-center justify-between px-4 py-3">
               <span className="text-sm text-[#1A1A1A]">🌅 早餐保健品提醒</span>
               <label className="relative inline-flex items-center cursor-pointer">
@@ -201,8 +324,6 @@ export default function SettingsPage() {
                 <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-[#D4A24E] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
               </label>
             </div>
-
-            {/* Breakfast time */}
             <div className="flex items-center justify-between px-4 py-3">
               <span className="text-sm text-[#1A1A1A]">早餐提醒時間</span>
               <input
@@ -212,8 +333,6 @@ export default function SettingsPage() {
                 className="text-sm text-[#D4A24E] outline-none bg-transparent"
               />
             </div>
-
-            {/* Dinner toggle */}
             <div className="flex items-center justify-between px-4 py-3">
               <span className="text-sm text-[#1A1A1A]">🌙 晚餐保健品提醒</span>
               <label className="relative inline-flex items-center cursor-pointer">
@@ -226,8 +345,6 @@ export default function SettingsPage() {
                 <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-[#D4A24E] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
               </label>
             </div>
-
-            {/* Dinner time */}
             <div className="flex items-center justify-between px-4 py-3">
               <span className="text-sm text-[#1A1A1A]">晚餐提醒時間</span>
               <input
@@ -237,7 +354,6 @@ export default function SettingsPage() {
                 className="text-sm text-[#D4A24E] outline-none bg-transparent"
               />
             </div>
-
           </div>
         </section>
 
