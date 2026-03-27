@@ -269,7 +269,7 @@ export default function TodayPage() {
               onKeyDown={(e) => e.key === "Enter" && submitCustom()}
               className="flex-1 bg-stone-50 rounded-xl px-3 py-2 text-sm outline-none border border-stone-100 focus:border-[#e9f955] transition-colors placeholder:text-[#C4B8AC]"
             />
-            <button onClick={submitCustom} className="px-4 py-2 rounded-xl bg-[#e9f955] text-white text-sm font-medium active:opacity-80 transition-opacity">加入</button>
+            <button onClick={submitCustom} className="px-4 py-2 rounded-xl bg-[#e9f955] text-[#1a1a1a] text-sm font-medium active:opacity-80 transition-opacity">加入</button>
           </div>
           {protein > 0 && (
             <button onClick={() => handleProtein(0)} className="mt-2 text-xs text-[#8B7D6B]/60 underline">重置</button>
@@ -288,6 +288,53 @@ export default function TodayPage() {
             <RatingDots value={cravings} onChange={handleCravings} activeColor="#E8734A" />
           </div>
           {cravings === 0 && <p className="text-xs text-[#6B9E78] mt-2">今天很棒，繼續保持 💪</p>}
+        </section>
+
+        {/* 今日建議 */}
+        <section>
+          <h2 className="text-sm font-semibold text-[#1A1A1A] mb-2 px-1">今日建議</h2>
+          <div className="flex flex-col gap-2">
+            {/* 飲水建議 */}
+            {(() => {
+              let msg = "";
+              if (waterMl < 500) msg = "今天水喝得很少，趕快補！脫水會讓你更想吃甜食 💧";
+              else if (waterMl < 1500) msg = "水分還不夠，再喝幾杯就到目標了";
+              else if (waterMl < waterGoal) msg = "快到了！最後一哩路 💪";
+              else msg = "飲水達標！你的腸胃正在感謝你 ✅";
+              return (
+                <div className="bg-white rounded-2xl shadow-sm flex overflow-hidden">
+                  <div className="w-1 shrink-0" style={{ backgroundColor: "#5B9BD5" }} />
+                  <p className="px-4 py-3 text-sm text-[#1a1a1a]">{msg}</p>
+                </div>
+              );
+            })()}
+            {/* 蛋白質建議 */}
+            {(() => {
+              let msg = "";
+              if (protein < 30) msg = "蛋白質嚴重不足，血糖會不穩，今天記得多吃一份雞胸或蛋";
+              else if (protein < 70) msg = "蛋白質還差一截，下一餐先吃肉再吃飯";
+              else if (protein < proteinGoal) msg = "蛋白質快達標了，再加一份豆漿或核桃";
+              else msg = "蛋白質達標！血糖今天會比較穩 ✅";
+              return (
+                <div className="bg-white rounded-2xl shadow-sm flex overflow-hidden">
+                  <div className="w-1 shrink-0" style={{ backgroundColor: "#6B9E78" }} />
+                  <p className="px-4 py-3 text-sm text-[#1a1a1a]">{msg}</p>
+                </div>
+              );
+            })()}
+            {/* 渴望建議 */}
+            {cravings >= 1 && (() => {
+              const msg = cravings <= 2
+                ? "渴望出現了，記得下次先喝水等 5 分鐘"
+                : "今天渴望比較多，可能跟壓力或睡眠有關，不是你的錯 🧠";
+              return (
+                <div className="bg-white rounded-2xl shadow-sm flex overflow-hidden">
+                  <div className="w-1 shrink-0" style={{ backgroundColor: "#E8734A" }} />
+                  <p className="px-4 py-3 text-sm text-[#1a1a1a]">{msg}</p>
+                </div>
+              );
+            })()}
+          </div>
         </section>
 
         {/* 選填 */}

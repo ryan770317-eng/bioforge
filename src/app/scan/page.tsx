@@ -72,11 +72,11 @@ const FOOD_DATABASE: FoodItem[] = [
 
 const STATUS_ORDER: FoodStatus[] = ["banned", "rotation", "observe", "safe"];
 
-const STATUS_CONFIG: Record<FoodStatus, { label: string; dot: string; text: string }> = {
-  safe:     { label: "安全",  dot: "#6B9E78", text: "#6B9E78" },
-  rotation: { label: "輪替",  dot: "#D4A24E", text: "#D4A24E" },
-  observe:  { label: "觀察",  dot: "#8B7D6B", text: "#8B7D6B" },
-  banned:   { label: "停食",  dot: "#E8734A", text: "#E8734A" },
+const STATUS_CONFIG: Record<FoodStatus, { label: string; dot: string; text: string; cardBg: string }> = {
+  safe:     { label: "安全",  dot: "#6B9E78", text: "#6B9E78", cardBg: "#F0FFF4" },
+  rotation: { label: "輪替",  dot: "#D4A24E", text: "#D4A24E", cardBg: "#FFFBF0" },
+  observe:  { label: "觀察",  dot: "#8B7D6B", text: "#8B7D6B", cardBg: "#FFFDF0" },
+  banned:   { label: "停食",  dot: "#E8734A", text: "#E8734A", cardBg: "#FFF0ED" },
 };
 
 function daysUntil(dateStr: string): number {
@@ -227,7 +227,7 @@ export default function ScanPage() {
                     ? `每 ${food.rotationDays} 天 1 次`
                     : null;
                 return (
-                  <li key={food.name} className="bg-white rounded-2xl px-4 py-3 shadow-sm">
+                  <li key={food.name} className="rounded-2xl px-4 py-3 shadow-sm" style={{ backgroundColor: cfg.cardBg }}>
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-medium text-[#1A1A1A]">{food.name}</span>
                       <span className="flex items-center gap-1.5 whitespace-nowrap">

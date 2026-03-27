@@ -54,7 +54,7 @@ export default function BottomNav() {
         {/* Logo */}
         <div className="px-5 mb-8 flex items-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/icon.png" alt="BioHACKING" className="h-10 w-auto" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+          <img src="/logo.png" alt="BioHACKING" className="h-9 w-auto" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
         </div>
 
         {/* Nav items */}
