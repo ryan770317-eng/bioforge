@@ -36,12 +36,25 @@ function SettingRow({ label, value, onChange, type = "text" }: {
   );
 }
 
+// Reset stale notification prefs written by old buggy code
+function resetStaleNotifPrefs() {
+  try {
+    if (localStorage.getItem("notif_pref_v") !== "2") {
+      ["notif_breakfast","notif_dinner","notif_breakfast_time","notif_dinner_time"].forEach(
+        (k) => localStorage.removeItem(k)
+      );
+      localStorage.setItem("notif_pref_v", "2");
+    }
+  } catch {}
+}
+
 function NotifToggleRow({ label, storageKey, defaultVal, onChange }: {
   label: string; storageKey: string; defaultVal: boolean; onChange?: () => void;
 }) {
   const [on, setOn] = useState(defaultVal);
 
   useEffect(() => {
+    resetStaleNotifPrefs();
     try {
       const v = localStorage.getItem(storageKey);
       if (v !== null) setOn(v === "true");
@@ -63,8 +76,7 @@ function NotifToggleRow({ label, storageKey, defaultVal, onChange }: {
         style={{ backgroundColor: on ? "#D4A24E" : "#E7E0D8" }}
       >
         <span
-          className="absolute top-1 w-4 h-4 rounded-full bg-white transition-transform shadow-sm"
-          style={{ transform: on ? "translateX(18px)" : "translateX(2px)" }}
+          className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${on ? "translate-x-5" : "translate-x-0"}`}
         />
       </button>
     </div>
@@ -77,6 +89,7 @@ function NotifTimeRow({ label, storageKey, defaultTime, onChange }: {
   const [time, setTime] = useState(defaultTime);
 
   useEffect(() => {
+    resetStaleNotifPrefs();
     try {
       const v = localStorage.getItem(storageKey);
       if (v !== null) setTime(v);
