@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Noto_Sans_TC } from "next/font/google";
 import "./globals.css";
 
@@ -11,6 +11,20 @@ const notoSansTC = Noto_Sans_TC({
 export const metadata: Metadata = {
   title: "BioForge",
   description: "智慧健康管理，從飲食開始",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "BioForge",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#D4A24E",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
