@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import BottomNav from "@/components/BottomNav";
+import { supabase } from "@/lib/supabase";
 
 const TIMER_SECONDS = 5 * 60;
 
@@ -81,6 +82,22 @@ export default function SosPage() {
     setTimerDone(false);
   }
 
+  function todayDate(): string {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  }
+
+  async function finishAndLog() {
+    setStep(4);
+    const chosenAlts = ALTERNATIVES.filter((a) => selectedAlts.has(a.id)).map((a) => a.label).join("、");
+    await supabase.from("craving_logs").insert({
+      date:               todayDate(),
+      intensity:          cravingLevel || null,
+      alternative_chosen: chosenAlts || null,
+      success:            selectedAlts.size > 0,
+    });
+  }
+
   function resetAll() {
     setStep(1);
     resetTimer();
@@ -111,7 +128,7 @@ export default function SosPage() {
   return (
     <>
       {/* Fixed header */}
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-md z-10 bg-[#FFF8F0] px-4 pt-4 pb-3 border-b border-stone-100">
+      <div className="fixed top-0 left-0 right-0 md:left-[200px] z-10 bg-[#FFF8F0] px-4 pt-4 pb-3 border-b border-stone-100">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-bold text-[#D4A24E]">🆘 渴望急救</h1>
           {/* Step indicator */}
@@ -130,7 +147,7 @@ export default function SosPage() {
         </div>
       </div>
 
-      <main className="pt-[68px] pb-24 px-4 max-w-md mx-auto">
+      <main className="pt-[68px] pb-24 px-4 w-full max-w-2xl mx-auto">
 
         {/* ── Step 1：喝水 + 計時 ── */}
         {step === 1 && (
@@ -297,7 +314,7 @@ export default function SosPage() {
             </div>
 
             <button
-              onClick={() => setStep(4)}
+              onClick={finishAndLog}
               className="w-full py-2.5 rounded-full text-sm font-semibold text-white bg-[#D4A24E] active:opacity-80 transition-opacity"
             >
               完成紀錄 →

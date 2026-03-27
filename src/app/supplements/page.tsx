@@ -82,14 +82,14 @@ export default function SupplementsPage() {
   return (
     <>
       {/* Fixed header */}
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-md z-10 bg-[#FFF8F0] px-4 pt-4 pb-3 border-b border-stone-100">
+      <div className="fixed top-0 left-0 right-0 md:left-[200px] z-10 bg-[#FFF8F0] px-4 pt-4 pb-3 border-b border-stone-100">
         <div className="flex items-baseline justify-between">
           <h1 className="text-xl font-bold text-[#D4A24E]">保健品</h1>
           <span className="text-xs text-[#8B7D6B]">{todayLabel()}</span>
         </div>
       </div>
 
-      <main className="pt-[68px] pb-24 px-4 max-w-md mx-auto space-y-5">
+      <main className="pt-[68px] pb-24 px-4 w-full max-w-2xl mx-auto space-y-5">
         {SUPPLEMENT_GROUPS.map((group) => {
           const doneCount = group.items.filter((i) => checked.has(i.id)).length;
           return (

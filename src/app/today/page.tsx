@@ -3,11 +3,10 @@ import { useState, useEffect, useRef } from "react";
 import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/lib/supabase";
 
-const WATER_GOAL = 2000;
+const DEFAULT_WATER_GOAL   = 2000;
+const DEFAULT_PROTEIN_GOAL = 105;
 const WATER_STEP = 250;
-const WATER_CUPS = WATER_GOAL / WATER_STEP; // 8
 
-const PROTEIN_GOAL = 105;
 const PROTEIN_PRESETS = [
   { label: "雞蛋", g: 7 },
   { label: "豆漿", g: 8 },
@@ -18,12 +17,12 @@ const PROTEIN_PRESETS = [
 
 function todayDate(): string {
   const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 }
 
 function todayLabel(): string {
   const d = new Date();
-  return `${d.getMonth() + 1}/${d.getDate()}`;
+  return `${d.getMonth()+1}/${d.getDate()}`;
 }
 
 function ProgressBar({ value, goal, gradient, doneColor = "#6B9E78" }: {
@@ -41,9 +40,7 @@ function ProgressBar({ value, goal, gradient, doneColor = "#6B9E78" }: {
   );
 }
 
-function RatingDots({
-  value, onChange, max = 5, activeColor,
-}: {
+function RatingDots({ value, onChange, max = 5, activeColor }: {
   value: number; onChange: (v: number) => void; max?: number; activeColor: string;
 }) {
   return (
@@ -76,19 +73,37 @@ type LogFields = {
 };
 
 export default function TodayPage() {
-  const [waterCups, setWaterCups] = useState(0);
-  const [protein,   setProtein]   = useState(0);
-  const [customG,   setCustomG]   = useState("");
-  const [cravings,  setCravings]  = useState(0);
-  const [optOpen,   setOptOpen]   = useState(false);
-  const [energy,    setEnergy]    = useState(0);
-  const [gut,       setGut]       = useState(0);
-  const [stress,    setStress]    = useState(0);
-  const [saving,    setSaving]    = useState(false);
+  const [waterGoal,   setWaterGoal]   = useState(DEFAULT_WATER_GOAL);
+  const [proteinGoal, setProteinGoal] = useState(DEFAULT_PROTEIN_GOAL);
+  const waterCups = Math.round(waterGoal / WATER_STEP);
+
+  const [cups,     setCups]     = useState(0);
+  const [protein,  setProtein]  = useState(0);
+  const [customG,  setCustomG]  = useState("");
+  const [cravings, setCravings] = useState(0);
+  const [optOpen,  setOptOpen]  = useState(false);
+  const [energy,   setEnergy]   = useState(0);
+  const [gut,      setGut]      = useState(0);
+  const [stress,   setStress]   = useState(0);
+  const [saving,   setSaving]   = useState(false);
+  const [errMsg,   setErrMsg]   = useState("");
   const saveCount = useRef(0);
 
-  // Load today's record on mount
+  // Load goals + today's log
   useEffect(() => {
+    supabase
+      .from("user_settings")
+      .select("key,value")
+      .in("key", ["protein_goal_g","water_goal_ml"])
+      .then(({ data }) => {
+        if (!data) return;
+        const map = new Map(data.map((r) => [r.key, r.value]));
+        const pg = parseInt(map.get("protein_goal_g") ?? "", 10);
+        const wg = parseInt(map.get("water_goal_ml")  ?? "", 10);
+        if (!isNaN(pg) && pg > 0) setProteinGoal(pg);
+        if (!isNaN(wg) && wg > 0) setWaterGoal(wg);
+      });
+
     supabase
       .from("daily_logs")
       .select("*")
@@ -96,7 +111,7 @@ export default function TodayPage() {
       .single()
       .then(({ data }) => {
         if (!data) return;
-        setWaterCups(Math.round((data.water_ml ?? 0) / WATER_STEP));
+        setCups(Math.round((data.water_ml ?? 0) / WATER_STEP));
         setProtein(data.protein_g ?? 0);
         setCravings(data.craving_count ?? 0);
         setEnergy(data.afternoon_energy ?? 0);
@@ -105,24 +120,32 @@ export default function TodayPage() {
       });
   }, []);
 
-  async function upsert(fields: LogFields) {
+  async function upsert(fields: LogFields, rollback?: () => void) {
     saveCount.current += 1;
     setSaving(true);
-    await supabase
+    setErrMsg("");
+    const { error } = await supabase
       .from("daily_logs")
       .upsert({ date: todayDate(), ...fields }, { onConflict: "date" });
     saveCount.current -= 1;
     if (saveCount.current === 0) setSaving(false);
+    if (error) {
+      rollback?.();
+      setErrMsg("儲存失敗，請重試");
+      setTimeout(() => setErrMsg(""), 3000);
+    }
   }
 
-  function handleWater(cups: number) {
-    setWaterCups(cups);
-    upsert({ water_ml: cups * WATER_STEP });
+  function handleWater(next: number) {
+    const prev = cups;
+    setCups(next); // optimistic
+    upsert({ water_ml: next * WATER_STEP }, () => setCups(prev));
   }
 
   function handleProtein(g: number) {
-    setProtein(g);
-    upsert({ protein_g: g });
+    const prev = protein;
+    setProtein(g); // optimistic
+    upsert({ protein_g: g }, () => setProtein(prev));
   }
 
   function addProtein(g: number) {
@@ -135,84 +158,82 @@ export default function TodayPage() {
   }
 
   function handleCravings(n: number) {
+    const prev = cravings;
     setCravings(n);
-    upsert({ craving_count: n });
+    upsert({ craving_count: n }, () => setCravings(prev));
   }
 
   function handleEnergy(n: number) {
+    const prev = energy;
     setEnergy(n);
-    upsert({ afternoon_energy: n });
+    upsert({ afternoon_energy: n }, () => setEnergy(prev));
   }
 
   function handleGut(n: number) {
+    const prev = gut;
     setGut(n);
-    upsert({ gut_comfort: n });
+    upsert({ gut_comfort: n }, () => setGut(prev));
   }
 
   function handleStress(n: number) {
+    const prev = stress;
     setStress(n);
-    upsert({ stress_level: n });
+    upsert({ stress_level: n }, () => setStress(prev));
   }
 
-  const waterMl   = waterCups * WATER_STEP;
-  const waterDone = waterCups >= WATER_CUPS;
-  const proteinDone = protein >= PROTEIN_GOAL;
+  const waterMl     = cups * WATER_STEP;
+  const waterDone   = waterMl >= waterGoal;
+  const proteinDone = protein >= proteinGoal;
 
   return (
     <>
-      {/* Fixed header */}
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-md z-10 bg-[#FFF8F0] px-4 pt-4 pb-3 border-b border-stone-100">
-        <div className="flex items-baseline justify-between">
+      <div className="fixed top-0 left-0 right-0 md:left-[200px] z-10 bg-[#FFF8F0] px-4 pt-4 pb-3 border-b border-stone-100">
+        <div className="max-w-2xl mx-auto flex items-baseline justify-between">
           <h1 className="text-xl font-bold text-[#D4A24E]">今日打卡</h1>
           <div className="flex items-center gap-2">
-            {saving && (
-              <div className="w-1.5 h-1.5 rounded-full bg-[#D4A24E] animate-pulse" />
-            )}
+            {saving && <div className="w-1.5 h-1.5 rounded-full bg-[#D4A24E] animate-pulse" />}
+            {errMsg  && <span className="text-xs text-[#E8734A]">{errMsg}</span>}
             <span className="text-xs text-[#8B7D6B]">{todayLabel()}</span>
           </div>
         </div>
       </div>
 
-      <main className="pt-[68px] pb-24 px-4 max-w-md mx-auto space-y-3">
+      <main className="pt-[68px] pb-24 px-4 w-full max-w-2xl mx-auto space-y-3">
 
-        {/* ── 飲水 ── */}
+        {/* 飲水 */}
         <section className="bg-white rounded-2xl px-4 py-4 shadow-sm">
           <div className="flex items-baseline justify-between mb-3">
             <h2 className="text-sm font-semibold text-[#1A1A1A]">💧 飲水</h2>
             <span className={`text-xs font-medium ${waterDone ? "text-[#6B9E78]" : "text-[#8B7D6B]"}`}>
-              {waterMl} / {WATER_GOAL} ml{waterDone ? " ✓" : ""}
+              {waterMl} / {waterGoal} ml{waterDone ? " ✓" : ""}
             </span>
           </div>
           <div className="flex gap-2 flex-wrap">
-            {Array.from({ length: WATER_CUPS }, (_, i) => {
-              const filled = i < waterCups;
+            {Array.from({ length: waterCups }, (_, i) => {
+              const filled = i < cups;
               return (
                 <button
                   key={i}
                   onClick={() => handleWater(filled ? i : i + 1)}
-                  aria-label={`${(i + 1) * WATER_STEP}ml`}
+                  aria-label={`${(i+1)*WATER_STEP}ml`}
                   className="flex flex-col items-center gap-0.5 transition-transform active:scale-95"
                 >
-                  <span className="text-2xl leading-none" style={{ filter: filled ? "none" : "grayscale(1) opacity(0.3)" }}>
-                    💧
-                  </span>
+                  <span className="text-2xl leading-none" style={{ filter: filled ? "none" : "grayscale(1) opacity(0.3)" }}>💧</span>
                   <span className="text-[9px] text-[#8B7D6B]">{WATER_STEP}</span>
                 </button>
               );
             })}
           </div>
-          <ProgressBar value={waterMl} goal={WATER_GOAL} gradient="linear-gradient(to right, #D4A24E, #E8B96A)" />
-          {waterDone && (
-            <p className="text-xs text-[#6B9E78] font-medium mt-1.5 text-center">🎉 今日達標！</p>
-          )}
+          <ProgressBar value={waterMl} goal={waterGoal} gradient="linear-gradient(to right, #D4A24E, #E8B96A)" />
+          {waterDone && <p className="text-xs text-[#6B9E78] font-medium mt-1.5 text-center">🎉 今日達標！</p>}
         </section>
 
-        {/* ── 蛋白質 ── */}
+        {/* 蛋白質 */}
         <section className="bg-white rounded-2xl px-4 py-4 shadow-sm">
           <div className="flex items-baseline justify-between mb-3">
             <h2 className="text-sm font-semibold text-[#1A1A1A]">🥩 蛋白質</h2>
             <span className={`text-xs font-medium ${proteinDone ? "text-[#6B9E78]" : "text-[#8B7D6B]"}`}>
-              {protein} / {PROTEIN_GOAL} g{proteinDone ? " ✓" : ""}
+              {protein} / {proteinGoal} g{proteinDone ? " ✓" : ""}
             </span>
           </div>
           <div className="flex flex-wrap gap-2 mb-3">
@@ -236,25 +257,16 @@ export default function TodayPage() {
               onKeyDown={(e) => e.key === "Enter" && submitCustom()}
               className="flex-1 bg-stone-50 rounded-xl px-3 py-2 text-sm outline-none border border-stone-100 focus:border-[#D4A24E] transition-colors placeholder:text-[#C4B8AC]"
             />
-            <button
-              onClick={submitCustom}
-              className="px-4 py-2 rounded-xl bg-[#D4A24E] text-white text-sm font-medium active:opacity-80 transition-opacity"
-            >
-              加入
-            </button>
+            <button onClick={submitCustom} className="px-4 py-2 rounded-xl bg-[#D4A24E] text-white text-sm font-medium active:opacity-80 transition-opacity">加入</button>
           </div>
           {protein > 0 && (
-            <button onClick={() => handleProtein(0)} className="mt-2 text-xs text-[#8B7D6B]/60 underline">
-              重置
-            </button>
+            <button onClick={() => handleProtein(0)} className="mt-2 text-xs text-[#8B7D6B]/60 underline">重置</button>
           )}
-          <ProgressBar value={protein} goal={PROTEIN_GOAL} />
-          {proteinDone && (
-            <p className="text-xs text-[#6B9E78] font-medium mt-1.5 text-center">🎉 今日達標！</p>
-          )}
+          <ProgressBar value={protein} goal={proteinGoal} />
+          {proteinDone && <p className="text-xs text-[#6B9E78] font-medium mt-1.5 text-center">🎉 今日達標！</p>}
         </section>
 
-        {/* ── 渴望次數 ── */}
+        {/* 渴望次數 */}
         <section className="bg-white rounded-2xl px-4 py-4 shadow-sm">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-[#1A1A1A]">🍬 渴望次數</h2>
@@ -263,12 +275,10 @@ export default function TodayPage() {
           <div className="mt-3">
             <RatingDots value={cravings} onChange={handleCravings} activeColor="#E8734A" />
           </div>
-          {cravings === 0 && (
-            <p className="text-xs text-[#6B9E78] mt-2">今天很棒，繼續保持 💪</p>
-          )}
+          {cravings === 0 && <p className="text-xs text-[#6B9E78] mt-2">今天很棒，繼續保持 💪</p>}
         </section>
 
-        {/* ── 選填 ── */}
+        {/* 選填 */}
         <section className="bg-white rounded-2xl shadow-sm overflow-hidden">
           <button
             onClick={() => setOptOpen((v) => !v)}

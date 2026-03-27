@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans_TC } from "next/font/google";
 import "./globals.css";
+import SwRegister from "@/components/SwRegister";
 
 const notoSansTC = Noto_Sans_TC({
   variable: "--font-noto-sans-tc",
@@ -34,7 +35,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-TW" className={`${notoSansTC.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full bg-[#FFF8F0]">
+        <SwRegister />
+        {/* md+: content shifted right of 200px side nav */}
+        <div className="md:ml-[200px]">
+          {children}
+        </div>
+      </body>
     </html>
   );
 }

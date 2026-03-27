@@ -14,29 +14,28 @@ const MILESTONES = [
   { name: "小麥",   emoji: "🌾", banFrom: "2026-01-01", banUntil: null },
 ];
 
-// ── Helpers ──────────────────────────────────────────────────
 function localDate(daysAgo = 0): string {
   const d = new Date();
   d.setDate(d.getDate() - daysAgo);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 }
 
 function daysBetween(a: string, b: string): number {
   const da = new Date(a), db = new Date(b);
-  da.setHours(0, 0, 0, 0); db.setHours(0, 0, 0, 0);
+  da.setHours(0,0,0,0); db.setHours(0,0,0,0);
   return Math.round((db.getTime() - da.getTime()) / 86400000);
 }
 
 function dateRangeLabel(period: Period): string {
-  const end = new Date();
+  const end   = new Date();
   const start = new Date();
   start.setDate(end.getDate() - parseInt(period) + 1);
-  const fmt = (d: Date) => `${d.getMonth() + 1}/${d.getDate()}`;
+  const fmt = (d: Date) => `${d.getMonth()+1}/${d.getDate()}`;
   return `${fmt(start)} – ${fmt(end)}`;
 }
 
 function last7DayLabels(): string[] {
-  const names = ["日", "一", "二", "三", "四", "五", "六"];
+  const names = ["日","一","二","三","四","五","六"];
   return Array.from({ length: 7 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - (6 - i));
@@ -45,25 +44,36 @@ function last7DayLabels(): string[] {
 }
 
 function avgInt(arr: number[]): number {
-  return arr.length ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : 0;
+  return arr.length ? Math.round(arr.reduce((a,b) => a+b, 0) / arr.length) : 0;
 }
 
 function avgFloat(arr: number[]): number {
-  return arr.length
-    ? Math.round((arr.reduce((a, b) => a + b, 0) / arr.length) * 10) / 10
-    : 0;
+  return arr.length ? Math.round((arr.reduce((a,b) => a+b, 0) / arr.length) * 10) / 10 : 0;
 }
 
-// ── Sub-components ────────────────────────────────────────────
+// Group daily data into weekly buckets (each ~7 days), returns array of {label, avg}
+function toWeeklyBuckets(values: number[]): { label: string; avg: number }[] {
+  const buckets: { label: string; avg: number }[] = [];
+  const total = values.length;
+  const weeks = Math.ceil(total / 7);
+  for (let w = 0; w < weeks; w++) {
+    const start = w * 7;
+    const end   = Math.min(start + 7, total);
+    const slice = values.slice(start, end);
+    buckets.push({ label: `W${w + 1}`, avg: avgInt(slice) });
+  }
+  return buckets;
+}
+
 function MetricCard({ label, value, sub, color, barColor, pct }: {
   label: string; value: string; sub: string; color: string; barColor: string; pct: number | null;
 }) {
   return (
     <div className="bg-white rounded-2xl shadow-sm overflow-hidden flex">
       <div className="w-1 shrink-0" style={{ backgroundColor: barColor }} />
-      <div className="flex-1 px-4 py-3">
+      <div className="flex-1 px-3 py-3 min-w-0">
         <p className="text-[10px] text-[#8B7D6B] mb-1">{label}</p>
-        <p className="text-lg font-bold leading-none" style={{ color }}>{value}</p>
+        <p className="text-base font-bold leading-none truncate" style={{ color }}>{value}</p>
         <p className="text-[10px] text-[#8B7D6B] mt-1">{sub}</p>
         {pct !== null && (
           <div className="h-1.5 bg-stone-100 rounded-full mt-2 overflow-hidden">
@@ -76,22 +86,28 @@ function MetricCard({ label, value, sub, color, barColor, pct }: {
   );
 }
 
-// ── Page ─────────────────────────────────────────────────────
+type DayRow = {
+  water_ml: number;
+  protein_g: number;
+  craving_count: number;
+  afternoon_energy: number | null;
+};
+
 export default function ReportPage() {
-  const [period, setPeriod] = useState<Period>("7");
-  const [loading, setLoading] = useState(true);
+  const [period,   setPeriod]   = useState<Period>("7");
+  const [loading,  setLoading]  = useState(true);
+  const [rows,     setRows]     = useState<DayRow[]>([]);
   const [water7,   setWater7]   = useState<number[]>(Array(7).fill(0));
-  const [protein7, setProtein7] = useState<number[]>(Array(7).fill(0));
-  const [craving7, setCraving7] = useState<number[]>(Array(7).fill(0));
-  const [energy7,  setEnergy7]  = useState<(number | null)[]>(Array(7).fill(null));
 
   const dayLabels = last7DayLabels();
   const today = localDate();
 
+  // Fetch data whenever period changes
   useEffect(() => {
     async function load() {
       setLoading(true);
-      const dates = Array.from({ length: 7 }, (_, i) => localDate(6 - i));
+      const n = parseInt(period);
+      const dates = Array.from({ length: n }, (_, i) => localDate(n - 1 - i));
 
       const { data } = await supabase
         .from("daily_logs")
@@ -100,44 +116,57 @@ export default function ReportPage() {
 
       const map = new Map((data ?? []).map((r) => [r.date, r]));
 
-      setWater7(  dates.map((d) => map.get(d)?.water_ml      ?? 0));
-      setProtein7(dates.map((d) => map.get(d)?.protein_g     ?? 0));
-      setCraving7(dates.map((d) => map.get(d)?.craving_count ?? 0));
-      setEnergy7( dates.map((d) => map.get(d)?.afternoon_energy ?? null));
+      const filled: DayRow[] = dates.map((d) => ({
+        water_ml:        map.get(d)?.water_ml        ?? 0,
+        protein_g:       map.get(d)?.protein_g       ?? 0,
+        craving_count:   map.get(d)?.craving_count   ?? 0,
+        afternoon_energy: map.get(d)?.afternoon_energy ?? null,
+      }));
+
+      setRows(filled);
+
+      if (period === "7") {
+        setWater7(filled.map((r) => r.water_ml));
+      }
+
       setLoading(false);
     }
     load();
-  }, []);
+  }, [period]);
 
-  const energyFilled = energy7.filter((v): v is number => v !== null);
+  const energyFilled = rows.map((r) => r.afternoon_energy).filter((v): v is number => v !== null);
   const metrics = {
-    water:    avgInt(water7),
-    protein:  avgInt(protein7),
-    cravings: avgFloat(craving7),
+    water:    avgInt(rows.map((r) => r.water_ml)),
+    protein:  avgInt(rows.map((r) => r.protein_g)),
+    cravings: avgFloat(rows.map((r) => r.craving_count)),
     energy:   energyFilled.length ? avgFloat(energyFilled) : null,
   };
 
+  // 30-day weekly water buckets
+  const weeklyWater = period === "30" ? toWeeklyBuckets(rows.map((r) => r.water_ml)) : [];
+
   return (
     <>
-      {/* Fixed header */}
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-md z-10 bg-[#FFF8F0] px-4 pt-4 pb-3 border-b border-stone-100">
-        <div className="flex items-baseline justify-between mb-3">
-          <h1 className="text-xl font-bold text-[#D4A24E]">週報</h1>
-          <span className="text-xs text-[#8B7D6B]">{dateRangeLabel(period)}</span>
-        </div>
-        <div className="flex gap-2">
-          {(["7", "30", "90"] as Period[]).map((p) => (
-            <button key={p} onClick={() => setPeriod(p)}
-              className="text-xs font-medium px-4 py-1.5 rounded-full transition-colors"
-              style={period === p
-                ? { backgroundColor: "#D4A24E", color: "#fff" }
-                : { backgroundColor: "#fff", color: "#8B7D6B", border: "1px solid #F0EBE4" }}
-            >{p} 天</button>
-          ))}
+      <div className="fixed top-0 left-0 right-0 md:left-[200px] z-10 bg-[#FFF8F0] px-4 pt-4 pb-3 border-b border-stone-100">
+        <div className="max-w-2xl mx-auto">
+          <div className="flex items-baseline justify-between mb-3">
+            <h1 className="text-xl font-bold text-[#D4A24E]">週報</h1>
+            <span className="text-xs text-[#8B7D6B]">{dateRangeLabel(period)}</span>
+          </div>
+          <div className="flex gap-2">
+            {(["7","30","90"] as Period[]).map((p) => (
+              <button key={p} onClick={() => setPeriod(p)}
+                className="text-xs font-medium px-4 py-1.5 rounded-full transition-colors"
+                style={period === p
+                  ? { backgroundColor: "#D4A24E", color: "#fff" }
+                  : { backgroundColor: "#fff", color: "#8B7D6B", border: "1px solid #F0EBE4" }}
+              >{p} 天</button>
+            ))}
+          </div>
         </div>
       </div>
 
-      <main className="pt-[108px] pb-24 px-4 w-full space-y-4">
+      <main className="pt-[108px] pb-24 px-4 w-full max-w-2xl mx-auto space-y-4">
 
         {loading ? (
           <div className="flex flex-col items-center justify-center pt-20 gap-3">
@@ -147,12 +176,12 @@ export default function ReportPage() {
           </div>
         ) : (
           <>
-            {/* Core metrics */}
+            {/* Core metrics — 4 cols on md+ */}
             <section>
               <h2 className="text-xs font-semibold text-[#8B7D6B] uppercase tracking-wide mb-2 px-1">
                 核心指標（近 {period} 天平均）
               </h2>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <MetricCard
                   label="平均飲水" value={`${metrics.water} ml`}
                   sub="目標 2000 ml" color="#6B9E78" barColor="#5B8CE8"
@@ -177,13 +206,13 @@ export default function ReportPage() {
               </div>
             </section>
 
-            {/* Bar chart — 7-day only uses real data */}
+            {/* Water trend chart */}
             {period === "7" ? (
               <section className="bg-white rounded-2xl px-4 pt-4 pb-3 shadow-sm">
                 <h2 className="text-sm font-semibold text-[#1A1A1A] mb-4">💧 飲水趨勢（7天）</h2>
                 <div className="flex items-end gap-1.5" style={{ height: 80 }}>
                   {water7.map((ml, i) => {
-                    const pct = ml / WATER_GOAL;
+                    const pct     = ml / WATER_GOAL;
                     const isToday = i === 6;
                     const reached = ml >= WATER_GOAL;
                     return (
@@ -192,9 +221,7 @@ export default function ReportPage() {
                           <div className="w-full rounded-t-md transition-all"
                             style={{
                               height: ml > 0 ? `${pct * 100}%` : "3px",
-                              backgroundColor: isToday ? "#D4A24E"
-                                : reached ? "#6B9E78"
-                                : ml > 0 ? "#D4A24E4D" : "#F0EBE4",
+                              backgroundColor: isToday ? "#D4A24E" : reached ? "#6B9E78" : ml > 0 ? "#D4A24E4D" : "#F0EBE4",
                             }}
                           />
                         </div>
@@ -216,9 +243,40 @@ export default function ReportPage() {
                   ))}
                 </div>
               </section>
+            ) : period === "30" ? (
+              <section className="bg-white rounded-2xl px-4 pt-4 pb-3 shadow-sm">
+                <h2 className="text-sm font-semibold text-[#1A1A1A] mb-4">💧 飲水趨勢（週平均）</h2>
+                <div className="flex items-end gap-2" style={{ height: 80 }}>
+                  {weeklyWater.map(({ label, avg }) => {
+                    const pct     = avg / WATER_GOAL;
+                    const reached = avg >= WATER_GOAL;
+                    return (
+                      <div key={label} className="flex-1 flex flex-col items-center gap-1 h-full">
+                        <div className="flex-1 w-full flex items-end">
+                          <div className="w-full rounded-t-md transition-all"
+                            style={{
+                              height: avg > 0 ? `${Math.min(pct * 100, 100)}%` : "3px",
+                              backgroundColor: reached ? "#6B9E78" : avg > 0 ? "#D4A24E4D" : "#F0EBE4",
+                            }}
+                          />
+                        </div>
+                        <span className="text-[9px] text-[#8B7D6B] leading-none">{label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="flex justify-between mt-1.5 px-0.5">
+                  <span className="text-[9px] text-[#8B7D6B]">0</span>
+                  <span className="text-[9px] text-[#8B7D6B]">目標 {WATER_GOAL} ml</span>
+                </div>
+              </section>
             ) : (
-              <section className="bg-white rounded-2xl px-4 py-6 shadow-sm flex items-center justify-center">
-                <p className="text-sm text-[#8B7D6B]">趨勢圖將在後續版本推出 📈</p>
+              <section className="bg-white rounded-2xl px-4 py-6 shadow-sm flex flex-col gap-3">
+                <h2 className="text-sm font-semibold text-[#1A1A1A]">💧 飲水趨勢（90天）</h2>
+                <p className="text-sm text-[#8B7D6B]">
+                  近90天共記錄 {rows.filter((r) => r.water_ml > 0).length} 天，
+                  達標 {rows.filter((r) => r.water_ml >= WATER_GOAL).length} 天。
+                </p>
               </section>
             )}
 
