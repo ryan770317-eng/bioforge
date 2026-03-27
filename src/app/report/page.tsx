@@ -50,18 +50,24 @@ function avgFloat(arr: number[]): number {
   return arr.length ? Math.round((arr.reduce((a,b) => a+b, 0) / arr.length) * 10) / 10 : 0;
 }
 
-// Group daily data into weekly buckets (each ~7 days), returns array of {label, avg}
+// Group daily data into weekly buckets (each 7 days), returns 4 buckets for 28-day window
 function toWeeklyBuckets(values: number[]): { label: string; avg: number }[] {
   const buckets: { label: string; avg: number }[] = [];
-  const total = values.length;
-  const weeks = Math.ceil(total / 7);
+  const weeks = Math.ceil(values.length / 7);
   for (let w = 0; w < weeks; w++) {
-    const start = w * 7;
-    const end   = Math.min(start + 7, total);
-    const slice = values.slice(start, end);
+    const slice = values.slice(w * 7, w * 7 + 7);
     buckets.push({ label: `W${w + 1}`, avg: avgInt(slice) });
   }
   return buckets;
+}
+
+// Group daily data into monthly buckets (each 30 days), returns 3 buckets for 90-day window
+function toMonthlyBuckets(values: number[]): { label: string; avg: number }[] {
+  return [
+    { label: "M1", avg: avgInt(values.slice(0, 30)) },
+    { label: "M2", avg: avgInt(values.slice(30, 60)) },
+    { label: "M3", avg: avgInt(values.slice(60, 90)) },
+  ];
 }
 
 function MetricCard({ label, value, sub, color, barColor, pct }: {
@@ -141,8 +147,8 @@ export default function ReportPage() {
     energy:   energyFilled.length ? avgFloat(energyFilled) : null,
   };
 
-  // 30-day weekly water buckets
-  const weeklyWater = period === "30" ? toWeeklyBuckets(rows.map((r) => r.water_ml)) : [];
+  const weeklyWater  = period === "30" ? toWeeklyBuckets(rows.map((r) => r.water_ml))  : [];
+  const monthlyWater = period === "90" ? toMonthlyBuckets(rows.map((r) => r.water_ml)) : [];
 
   return (
     <>
@@ -270,11 +276,33 @@ export default function ReportPage() {
                 </div>
               </section>
             ) : (
-              <section className="bg-white rounded-2xl px-4 py-6 shadow-sm flex flex-col gap-3">
-                <h2 className="text-sm font-semibold text-[#1A1A1A]">💧 飲水趨勢（90天）</h2>
-                <p className="text-sm text-[#8B7D6B]">
-                  近90天共記錄 {rows.filter((r) => r.water_ml > 0).length} 天，
-                  達標 {rows.filter((r) => r.water_ml >= WATER_GOAL).length} 天。
+              <section className="bg-white rounded-2xl px-4 pt-4 pb-3 shadow-sm">
+                <h2 className="text-sm font-semibold text-[#1A1A1A] mb-4">💧 飲水趨勢（月平均）</h2>
+                <div className="flex items-end gap-3" style={{ height: 80 }}>
+                  {monthlyWater.map(({ label, avg }) => {
+                    const pct     = avg / WATER_GOAL;
+                    const reached = avg >= WATER_GOAL;
+                    return (
+                      <div key={label} className="flex-1 flex flex-col items-center gap-1 h-full">
+                        <div className="flex-1 w-full flex items-end">
+                          <div className="w-full rounded-t-md transition-all"
+                            style={{
+                              height: avg > 0 ? `${Math.min(pct * 100, 100)}%` : "3px",
+                              backgroundColor: reached ? "#6B9E78" : avg > 0 ? "#D4A24E4D" : "#F0EBE4",
+                            }}
+                          />
+                        </div>
+                        <span className="text-[9px] text-[#8B7D6B] leading-none">{label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="flex justify-between mt-1.5 px-0.5">
+                  <span className="text-[9px] text-[#8B7D6B]">0</span>
+                  <span className="text-[9px] text-[#8B7D6B]">目標 {WATER_GOAL} ml</span>
+                </div>
+                <p className="text-[10px] text-[#8B7D6B] mt-2">
+                  達標 {rows.filter((r) => r.water_ml >= WATER_GOAL).length} 天 / 近90天
                 </p>
               </section>
             )}

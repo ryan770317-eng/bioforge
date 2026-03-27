@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/lib/supabase";
-import { scheduleReminders } from "@/lib/notifications";
+import { scheduleBreakfast, scheduleDinner } from "@/lib/notifications";
 
 interface BanItem {
   name: string;
@@ -108,25 +108,25 @@ export default function SettingsPage() {
   function handleBreakfastEnabled(val: boolean) {
     setBreakfastEnabled(val);
     try { localStorage.setItem("notif_breakfast", String(val)); } catch {}
-    scheduleReminders();
+    if (val) scheduleBreakfast(breakfastTime); else { /* timer cleared inside scheduleBreakfast on next enable */ }
   }
 
   function handleDinnerEnabled(val: boolean) {
     setDinnerEnabled(val);
     try { localStorage.setItem("notif_dinner", String(val)); } catch {}
-    scheduleReminders();
+    if (val) scheduleDinner(dinnerTime);
   }
 
   function handleBreakfastTime(val: string) {
     setBreakfastTime(val);
     try { localStorage.setItem("notif_breakfast_time", val); } catch {}
-    scheduleReminders();
+    if (breakfastEnabled) scheduleBreakfast(val);
   }
 
   function handleDinnerTime(val: string) {
     setDinnerTime(val);
     try { localStorage.setItem("notif_dinner_time", val); } catch {}
-    scheduleReminders();
+    if (dinnerEnabled) scheduleDinner(val);
   }
 
   return (

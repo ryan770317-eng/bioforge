@@ -1,79 +1,89 @@
-export async function requestPermission(): Promise<void> {
-  if (typeof window === "undefined" || !("Notification" in window)) return;
-  if (Notification.permission === "granted") {
-    scheduleReminders();
-    return;
-  }
-  if (Notification.permission !== "denied") {
-    const result = await Notification.requestPermission();
-    if (result === "granted") scheduleReminders();
-  }
+let breakfastTimer: ReturnType<typeof setTimeout> | null = null;
+let dinnerTimer:    ReturnType<typeof setTimeout> | null = null;
+
+export function registerSW(): void {
+  if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
+  navigator.serviceWorker.register("/sw.js").catch(() => {});
+}
+
+export async function requestPermission(): Promise<boolean> {
+  if (typeof window === "undefined" || !("Notification" in window)) return false;
+  if (Notification.permission === "granted") return true;
+  if (Notification.permission === "denied") return false;
+  const result = await Notification.requestPermission();
+  return result === "granted";
 }
 
 function msUntilNext(hour: number, minute: number): number {
-  const now = new Date();
+  const now  = new Date();
   const next = new Date();
   next.setHours(hour, minute, 0, 0);
   if (next <= now) next.setDate(next.getDate() + 1);
   return next.getTime() - now.getTime();
 }
 
-function getNotifPref(key: string, defaultVal: boolean): boolean {
-  try {
-    const v = localStorage.getItem(key);
-    return v === null ? defaultVal : v === "true";
-  } catch {
-    return defaultVal;
-  }
+function parseTime(time: string): { hour: number; minute: number } {
+  const [h, m] = time.split(":").map(Number);
+  return { hour: isNaN(h) ? 0 : h, minute: isNaN(m) ? 0 : m };
 }
 
-function getTimePref(key: string, defaultTime: string): { hour: number; minute: number } {
-  try {
-    const v = localStorage.getItem(key) ?? defaultTime;
-    const [h, m] = v.split(":").map(Number);
-    return { hour: h, minute: m };
-  } catch {
-    const [h, m] = defaultTime.split(":").map(Number);
-    return { hour: h, minute: m };
+function fireAndReschedule(
+  title: string,
+  body: string,
+  hour: number,
+  minute: number,
+  setTimer: (t: ReturnType<typeof setTimeout>) => void
+): void {
+  if (typeof window === "undefined") return;
+  if (Notification.permission === "granted") {
+    new Notification(title, { body, icon: "/icon-192.png" });
   }
+  const t = setTimeout(
+    () => fireAndReschedule(title, body, hour, minute, setTimer),
+    msUntilNext(hour, minute)
+  );
+  setTimer(t);
 }
 
-let breakfastTimer: ReturnType<typeof setTimeout> | null = null;
-let dinnerTimer:    ReturnType<typeof setTimeout> | null = null;
+export function scheduleBreakfast(time = "08:00"): void {
+  if (typeof window === "undefined") return;
+  if (breakfastTimer) { clearTimeout(breakfastTimer); breakfastTimer = null; }
+  const { hour, minute } = parseTime(time);
+  breakfastTimer = setTimeout(
+    () => fireAndReschedule(
+      "🌅 早餐時間！記得吃保健品 💊", "BioForge 提醒",
+      hour, minute,
+      (t) => { breakfastTimer = t; }
+    ),
+    msUntilNext(hour, minute)
+  );
+}
 
+export function scheduleDinner(time = "18:30"): void {
+  if (typeof window === "undefined") return;
+  if (dinnerTimer) { clearTimeout(dinnerTimer); dinnerTimer = null; }
+  const { hour, minute } = parseTime(time);
+  dinnerTimer = setTimeout(
+    () => fireAndReschedule(
+      "🌙 晚餐時間！SpectraZyme 記得餐前吃", "BioForge 提醒",
+      hour, minute,
+      (t) => { dinnerTimer = t; }
+    ),
+    msUntilNext(hour, minute)
+  );
+}
+
+/** Re-reads localStorage and reschedules both reminders. */
 export function scheduleReminders(): void {
   if (typeof window === "undefined") return;
-
-  if (breakfastTimer) clearTimeout(breakfastTimer);
-  if (dinnerTimer)    clearTimeout(dinnerTimer);
-
-  const breakfastOn = getNotifPref("notif_breakfast", true);
-  const dinnerOn    = getNotifPref("notif_dinner",    true);
-  const bt          = getTimePref("notif_breakfast_time", "08:00");
-  const dt          = getTimePref("notif_dinner_time",    "18:30");
-
-  function fire(title: string, body: string, repeatHour: number, repeatMin: number, prefKey: string, timeKey: string) {
-    if (!getNotifPref(prefKey, true)) return;
-    if (Notification.permission === "granted") {
-      new Notification(title, { body, icon: "/icon-192.png" });
-    }
-    const { hour, minute } = getTimePref(timeKey, `${repeatHour}:${String(repeatMin).padStart(2,"0")}`);
-    const next = setTimeout(() => fire(title, body, repeatHour, repeatMin, prefKey, timeKey), msUntilNext(hour, minute));
-    if (prefKey === "notif_breakfast") breakfastTimer = next;
-    else dinnerTimer = next;
-  }
-
-  if (breakfastOn) {
-    breakfastTimer = setTimeout(
-      () => fire("🌅 早餐時間！記得吃保健品 💊", "BioForge 提醒", bt.hour, bt.minute, "notif_breakfast", "notif_breakfast_time"),
-      msUntilNext(bt.hour, bt.minute)
-    );
-  }
-
-  if (dinnerOn) {
-    dinnerTimer = setTimeout(
-      () => fire("🌙 晚餐時間！SpectraZyme 記得餐前吃", "BioForge 提醒", dt.hour, dt.minute, "notif_dinner", "notif_dinner_time"),
-      msUntilNext(dt.hour, dt.minute)
-    );
-  }
+  try {
+    const bfOn = localStorage.getItem("notif_breakfast") !== "false";
+    const dnOn = localStorage.getItem("notif_dinner")    !== "false";
+    const bfT  = localStorage.getItem("notif_breakfast_time") ?? "08:00";
+    const dnT  = localStorage.getItem("notif_dinner_time")    ?? "18:30";
+    if (breakfastTimer) { clearTimeout(breakfastTimer); breakfastTimer = null; }
+    if (dinnerTimer)    { clearTimeout(dinnerTimer);    dinnerTimer    = null; }
+    if (bfOn) scheduleBreakfast(bfT);
+    if (dnOn) scheduleDinner(dnT);
+  } catch {}
 }

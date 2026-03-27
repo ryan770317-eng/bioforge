@@ -85,9 +85,10 @@ export default function TodayPage() {
   const [energy,   setEnergy]   = useState(0);
   const [gut,      setGut]      = useState(0);
   const [stress,   setStress]   = useState(0);
-  const [saving,   setSaving]   = useState(false);
-  const [errMsg,   setErrMsg]   = useState("");
+  const [saving,    setSaving]   = useState(false);
+  const [showToast, setShowToast] = useState(false);
   const saveCount = useRef(0);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load goals + today's log
   useEffect(() => {
@@ -120,10 +121,15 @@ export default function TodayPage() {
       });
   }, []);
 
+  function showError() {
+    setShowToast(true);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setShowToast(false), 3000);
+  }
+
   async function upsert(fields: LogFields, rollback?: () => void) {
     saveCount.current += 1;
     setSaving(true);
-    setErrMsg("");
     const { error } = await supabase
       .from("daily_logs")
       .upsert({ date: todayDate(), ...fields }, { onConflict: "date" });
@@ -131,8 +137,7 @@ export default function TodayPage() {
     if (saveCount.current === 0) setSaving(false);
     if (error) {
       rollback?.();
-      setErrMsg("儲存失敗，請重試");
-      setTimeout(() => setErrMsg(""), 3000);
+      showError();
     }
   }
 
@@ -187,12 +192,18 @@ export default function TodayPage() {
 
   return (
     <>
+      {/* Toast */}
+      {showToast && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] bg-[#E8734A] text-white text-xs font-medium px-4 py-2 rounded-full shadow-lg pointer-events-none">
+          儲存失敗，請重試
+        </div>
+      )}
+
       <div className="fixed top-0 left-0 right-0 md:left-[200px] z-10 bg-[#FFF8F0] px-4 pt-4 pb-3 border-b border-stone-100">
         <div className="max-w-2xl mx-auto flex items-baseline justify-between">
           <h1 className="text-xl font-bold text-[#D4A24E]">今日打卡</h1>
           <div className="flex items-center gap-2">
             {saving && <div className="w-1.5 h-1.5 rounded-full bg-[#D4A24E] animate-pulse" />}
-            {errMsg  && <span className="text-xs text-[#E8734A]">{errMsg}</span>}
             <span className="text-xs text-[#8B7D6B]">{todayLabel()}</span>
           </div>
         </div>
