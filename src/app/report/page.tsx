@@ -11,7 +11,6 @@ const MILESTONES = [
   { name: "腰果",   emoji: "🥜", banFrom: "2026-01-01", banUntil: "2026-09-20" },
   { name: "奇異果", emoji: "🥝", banFrom: "2026-01-01", banUntil: "2026-09-20" },
   { name: "鮪魚",   emoji: "🐟", banFrom: "2026-01-01", banUntil: "2026-06-20" },
-  { name: "小麥",   emoji: "🌾", banFrom: "2026-01-01", banUntil: null },
 ];
 
 function localDate(daysAgo = 0): string {

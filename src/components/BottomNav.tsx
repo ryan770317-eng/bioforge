@@ -79,9 +79,6 @@ export default function BottomNav() {
             );
           })}
         </div>
-        <div className="px-5">
-          <p className="text-[10px] text-[#C4B8AC]">v0.1.0</p>
-        </div>
       </nav>
     </>
   );

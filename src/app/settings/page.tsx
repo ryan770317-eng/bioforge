@@ -14,7 +14,6 @@ const INITIAL_BAN: BanItem[] = [
   { name: "腰果",   emoji: "🥜", banUntil: "2026-09-20" },
   { name: "奇異果", emoji: "🥝", banUntil: "2026-09-20" },
   { name: "鮪魚",   emoji: "🐟", banUntil: "2026-06-20" },
-  { name: "小麥",   emoji: "🌾", banUntil: "" },
 ];
 
 const SETTING_KEYS = ["name","height_cm","weight_kg","protein_goal_g","water_goal_ml"] as const;
