@@ -137,7 +137,7 @@ export default function ReportPage() {
         </div>
       </div>
 
-      <main className="pt-[108px] pb-24 px-4 max-w-md mx-auto space-y-4">
+      <main className="pt-[108px] pb-24 px-4 w-full space-y-4">
 
         {loading ? (
           <div className="flex flex-col items-center justify-center pt-20 gap-3">
