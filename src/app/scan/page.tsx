@@ -268,7 +268,7 @@ export default function ScanPage() {
           )}
         </main>
       ) : (
-        <main className="pt-[112px] pb-24 px-4 max-w-md mx-auto space-y-2 pt-2">
+        <main className="pt-[116px] pb-24 px-4 max-w-md mx-auto w-full flex flex-col gap-2">
           {RESTAURANTS.map((r) => {
             const open = expanded.has(r.id);
             return (
