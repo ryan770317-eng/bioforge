@@ -152,7 +152,7 @@ export default function ReportPage() {
               <h2 className="text-xs font-semibold text-[#8B7D6B] uppercase tracking-wide mb-2 px-1">
                 核心指標（近 {period} 天平均）
               </h2>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-3">
                 <MetricCard
                   label="平均飲水" value={`${metrics.water} ml`}
                   sub="目標 2000 ml" color="#6B9E78" barColor="#5B8CE8"
