@@ -36,83 +36,6 @@ function SettingRow({ label, value, onChange, type = "text" }: {
   );
 }
 
-// Reset stale notification prefs written by old buggy code
-function resetStaleNotifPrefs() {
-  try {
-    if (localStorage.getItem("notif_pref_v") !== "2") {
-      ["notif_breakfast","notif_dinner","notif_breakfast_time","notif_dinner_time"].forEach(
-        (k) => localStorage.removeItem(k)
-      );
-      localStorage.setItem("notif_pref_v", "2");
-    }
-  } catch {}
-}
-
-function NotifToggleRow({ label, storageKey, defaultVal, onChange }: {
-  label: string; storageKey: string; defaultVal: boolean; onChange?: () => void;
-}) {
-  const [on, setOn] = useState(defaultVal);
-
-  useEffect(() => {
-    resetStaleNotifPrefs();
-    try {
-      const v = localStorage.getItem(storageKey);
-      if (v !== null) setOn(v === "true");
-    } catch {}
-  }, [storageKey]);
-
-  function toggle() {
-    const next = !on;
-    setOn(next);
-    try { localStorage.setItem(storageKey, String(next)); } catch {}
-    onChange?.();
-  }
-  return (
-    <div className="flex items-center justify-between px-4 py-3">
-      <span className="text-sm text-[#1A1A1A]">{label}</span>
-      <button
-        onClick={toggle}
-        className="relative w-10 h-6 rounded-full transition-colors"
-        style={{ backgroundColor: on ? "#D4A24E" : "#E7E0D8" }}
-      >
-        <span
-          className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${on ? "translate-x-5" : "translate-x-0"}`}
-        />
-      </button>
-    </div>
-  );
-}
-
-function NotifTimeRow({ label, storageKey, defaultTime, onChange }: {
-  label: string; storageKey: string; defaultTime: string; onChange?: () => void;
-}) {
-  const [time, setTime] = useState(defaultTime);
-
-  useEffect(() => {
-    resetStaleNotifPrefs();
-    try {
-      const v = localStorage.getItem(storageKey);
-      if (v !== null) setTime(v);
-    } catch {}
-  }, [storageKey]);
-  function handleChange(v: string) {
-    setTime(v);
-    try { localStorage.setItem(storageKey, v); } catch {}
-    onChange?.();
-  }
-  return (
-    <div className="flex items-center justify-between px-4 py-3">
-      <span className="text-sm text-[#1A1A1A]">{label}</span>
-      <input
-        type="time"
-        value={time}
-        onChange={(e) => handleChange(e.target.value)}
-        className="text-sm text-[#D4A24E] outline-none bg-transparent"
-      />
-    </div>
-  );
-}
-
 export default function SettingsPage() {
   const [name,        setName]        = useState("");
   const [height,      setHeight]      = useState("");
@@ -123,7 +46,14 @@ export default function SettingsPage() {
   const [saving,      setSaving]      = useState(false);
   const [saved,       setSaved]       = useState(false);
 
+  // Notification state
+  const [breakfastEnabled, setBreakfastEnabled] = useState(true);
+  const [dinnerEnabled,    setDinnerEnabled]    = useState(true);
+  const [breakfastTime,    setBreakfastTime]    = useState("08:00");
+  const [dinnerTime,       setDinnerTime]       = useState("18:30");
+
   useEffect(() => {
+    // Load personal data from Supabase
     supabase
       .from("user_settings")
       .select("key,value")
@@ -137,6 +67,24 @@ export default function SettingsPage() {
         if (map.has("protein_goal_g")) setProteinGoal(map.get("protein_goal_g")!);
         if (map.has("water_goal_ml"))  setWaterGoal(map.get("water_goal_ml")!);
       });
+
+    // Load notification prefs from localStorage (clear old buggy values first)
+    try {
+      if (localStorage.getItem("notif_pref_v") !== "3") {
+        ["notif_breakfast","notif_dinner","notif_breakfast_time","notif_dinner_time"].forEach(
+          (k) => localStorage.removeItem(k)
+        );
+        localStorage.setItem("notif_pref_v", "3");
+      }
+      const bf = localStorage.getItem("notif_breakfast");
+      const dn = localStorage.getItem("notif_dinner");
+      const bt = localStorage.getItem("notif_breakfast_time");
+      const dt = localStorage.getItem("notif_dinner_time");
+      if (bf !== null) setBreakfastEnabled(bf === "true");
+      if (dn !== null) setDinnerEnabled(dn === "true");
+      if (bt !== null) setBreakfastTime(bt);
+      if (dt !== null) setDinnerTime(dt);
+    } catch {}
   }, []);
 
   async function save() {
@@ -156,6 +104,30 @@ export default function SettingsPage() {
 
   function updateBanDate(index: number, date: string) {
     setBanItems((prev) => prev.map((item, i) => (i === index ? { ...item, banUntil: date } : item)));
+  }
+
+  function handleBreakfastEnabled(val: boolean) {
+    setBreakfastEnabled(val);
+    try { localStorage.setItem("notif_breakfast", String(val)); } catch {}
+    scheduleReminders();
+  }
+
+  function handleDinnerEnabled(val: boolean) {
+    setDinnerEnabled(val);
+    try { localStorage.setItem("notif_dinner", String(val)); } catch {}
+    scheduleReminders();
+  }
+
+  function handleBreakfastTime(val: string) {
+    setBreakfastTime(val);
+    try { localStorage.setItem("notif_breakfast_time", val); } catch {}
+    scheduleReminders();
+  }
+
+  function handleDinnerTime(val: string) {
+    setDinnerTime(val);
+    try { localStorage.setItem("notif_dinner_time", val); } catch {}
+    scheduleReminders();
   }
 
   return (
@@ -216,10 +188,57 @@ export default function SettingsPage() {
         <section>
           <h2 className="text-xs font-semibold text-[#8B7D6B] uppercase tracking-wide mb-2 px-1">推播通知</h2>
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden divide-y divide-stone-50">
-            <NotifToggleRow label="🌅 早餐保健品提醒" storageKey="notif_breakfast" defaultVal={true} onChange={scheduleReminders} />
-            <NotifTimeRow   label="早餐提醒時間"       storageKey="notif_breakfast_time" defaultTime="08:00" onChange={scheduleReminders} />
-            <NotifToggleRow label="🌙 晚餐保健品提醒" storageKey="notif_dinner"    defaultVal={true} onChange={scheduleReminders} />
-            <NotifTimeRow   label="晚餐提醒時間"       storageKey="notif_dinner_time"    defaultTime="18:30" onChange={scheduleReminders} />
+
+            {/* Breakfast toggle */}
+            <div className="flex items-center justify-between px-4 py-3">
+              <span className="text-sm text-[#1A1A1A]">🌅 早餐保健品提醒</span>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={breakfastEnabled}
+                  onChange={(e) => handleBreakfastEnabled(e.target.checked)}
+                />
+                <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-[#D4A24E] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+              </label>
+            </div>
+
+            {/* Breakfast time */}
+            <div className="flex items-center justify-between px-4 py-3">
+              <span className="text-sm text-[#1A1A1A]">早餐提醒時間</span>
+              <input
+                type="time"
+                value={breakfastTime}
+                onChange={(e) => handleBreakfastTime(e.target.value)}
+                className="text-sm text-[#D4A24E] outline-none bg-transparent"
+              />
+            </div>
+
+            {/* Dinner toggle */}
+            <div className="flex items-center justify-between px-4 py-3">
+              <span className="text-sm text-[#1A1A1A]">🌙 晚餐保健品提醒</span>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={dinnerEnabled}
+                  onChange={(e) => handleDinnerEnabled(e.target.checked)}
+                />
+                <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-[#D4A24E] peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all" />
+              </label>
+            </div>
+
+            {/* Dinner time */}
+            <div className="flex items-center justify-between px-4 py-3">
+              <span className="text-sm text-[#1A1A1A]">晚餐提醒時間</span>
+              <input
+                type="time"
+                value={dinnerTime}
+                onChange={(e) => handleDinnerTime(e.target.value)}
+                className="text-sm text-[#D4A24E] outline-none bg-transparent"
+              />
+            </div>
+
           </div>
         </section>
 
