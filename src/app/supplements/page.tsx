@@ -101,18 +101,21 @@ export default function SupplementsPage() {
                 </h2>
                 <span className="text-xs text-[#8B7D6B]">{doneCount}/{group.items.length}</span>
               </div>
+              {doneCount === group.items.length && (
+                <p className="text-xs text-[#6B9E78] font-medium px-1 mb-2">✅ 全部完成！</p>
+              )}
               <ul className="space-y-2">
                 {group.items.map((item) => {
                   const done = checked.has(item.id);
                   return (
                     <li
                       key={item.id}
-                      className={`rounded-2xl px-4 py-3 shadow-sm flex items-start gap-3 transition-colors ${done ? "bg-[#6B9E780D]" : "bg-white"}`}
+                      className={`rounded-2xl px-4 py-3 shadow-sm flex items-start gap-3 transition-colors ${done ? "bg-[#6B9E7814]" : "bg-white"}`}
                     >
                       <button
                         onClick={() => toggle(item.id)}
                         aria-label={done ? "取消勾選" : "勾選"}
-                        className={`mt-0.5 shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${done ? "bg-[#6B9E78] border-[#6B9E78]" : "border-stone-200 bg-white"}`}
+                        className={`mt-0.5 shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${done ? "bg-[#D4A24E] border-[#D4A24E]" : "border-stone-200 bg-white"}`}
                       >
                         {done && (
                           <svg width="12" height="10" viewBox="0 0 12 10" fill="none">

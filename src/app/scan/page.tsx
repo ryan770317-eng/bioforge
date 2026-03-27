@@ -235,14 +235,18 @@ export default function ScanPage() {
               {query ? `找不到「${query}」` : "此分類目前沒有食物"}
             </p>
           ) : (
-            <ul className="space-y-1.5 pt-2">
+            <ul className="flex flex-col gap-2 pt-2">
               {filtered.map((food) => {
                 const cfg  = STATUS_CONFIG[food.status];
                 const days = food.banUntil ? daysUntil(food.banUntil) : null;
+                const cardBg =
+                  food.status === "safe"     ? "bg-[#6B9E7814]" :
+                  food.status === "banned"   ? "bg-[#E8734A14]" :
+                  food.status === "rotation" ? "bg-[#D4A24E14]" : "bg-white";
                 return (
                   <li
                     key={food.name}
-                    className={`rounded-2xl px-4 py-2.5 shadow-sm ${food.status === "safe" ? "bg-[#6B9E780D]" : "bg-white"}`}
+                    className={`rounded-2xl px-4 py-2.5 shadow-sm ${cardBg}`}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-medium text-[#1A1A1A]">{food.name}</span>
@@ -297,11 +301,11 @@ export default function ScanPage() {
                   <div className="px-4 pb-4 border-t border-stone-50 space-y-3 pt-3">
                     {/* Safe items */}
                     <div>
-                      <p className="text-[10px] font-semibold text-[#6B9E78] uppercase tracking-wide mb-1.5">✅ 可以吃</p>
+                      <p className="text-[10px] font-semibold text-[#6B9E78] uppercase tracking-wide mb-1.5">可以吃</p>
                       <ul className="space-y-1">
                         {r.safe.map((item) => (
                           <li key={item} className="flex items-start gap-2">
-                            <span className="text-[#6B9E78] text-xs mt-0.5 shrink-0">●</span>
+                            <span className="shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full bg-[#6B9E78]" />
                             <span className="text-sm text-[#1A1A1A]">{item}</span>
                           </li>
                         ))}
@@ -309,11 +313,11 @@ export default function ScanPage() {
                     </div>
                     {/* Avoid items */}
                     <div>
-                      <p className="text-[10px] font-semibold text-[#E8734A] uppercase tracking-wide mb-1.5">🚫 避開</p>
+                      <p className="text-[10px] font-semibold text-[#E8734A] uppercase tracking-wide mb-1.5">避開</p>
                       <ul className="space-y-1">
                         {r.avoid.map((item) => (
                           <li key={item} className="flex items-start gap-2">
-                            <span className="text-[#E8734A] text-xs mt-0.5 shrink-0">●</span>
+                            <span className="shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full bg-[#E8734A]" />
                             <span className="text-sm text-[#8B7D6B]">{item}</span>
                           </li>
                         ))}

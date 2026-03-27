@@ -26,12 +26,16 @@ function todayLabel(): string {
   return `${d.getMonth() + 1}/${d.getDate()}`;
 }
 
-function ProgressBar({ value, goal, color }: { value: number; goal: number; color: string }) {
+function ProgressBar({ value, goal, gradient, doneColor = "#6B9E78" }: {
+  value: number; goal: number; gradient?: string; doneColor?: string;
+}) {
+  const pct  = Math.min((value / goal) * 100, 100);
+  const done = pct >= 100;
   return (
     <div className="h-2 bg-stone-100 rounded-full overflow-hidden mt-2">
       <div
         className="h-full rounded-full transition-all duration-300"
-        style={{ width: `${Math.min((value / goal) * 100, 100)}%`, backgroundColor: color }}
+        style={{ width: `${pct}%`, background: done ? doneColor : (gradient ?? doneColor) }}
       />
     </div>
   );
@@ -197,7 +201,10 @@ export default function TodayPage() {
               );
             })}
           </div>
-          <ProgressBar value={waterMl} goal={WATER_GOAL} color="#6B9E78" />
+          <ProgressBar value={waterMl} goal={WATER_GOAL} gradient="linear-gradient(to right, #D4A24E, #E8B96A)" />
+          {waterDone && (
+            <p className="text-xs text-[#6B9E78] font-medium mt-1.5 text-center">🎉 今日達標！</p>
+          )}
         </section>
 
         {/* ── 蛋白質 ── */}
@@ -241,7 +248,10 @@ export default function TodayPage() {
               重置
             </button>
           )}
-          <ProgressBar value={protein} goal={PROTEIN_GOAL} color="#D4A24E" />
+          <ProgressBar value={protein} goal={PROTEIN_GOAL} />
+          {proteinDone && (
+            <p className="text-xs text-[#6B9E78] font-medium mt-1.5 text-center">🎉 今日達標！</p>
+          )}
         </section>
 
         {/* ── 渴望次數 ── */}
@@ -253,6 +263,9 @@ export default function TodayPage() {
           <div className="mt-3">
             <RatingDots value={cravings} onChange={handleCravings} activeColor="#E8734A" />
           </div>
+          {cravings === 0 && (
+            <p className="text-xs text-[#6B9E78] mt-2">今天很棒，繼續保持 💪</p>
+          )}
         </section>
 
         {/* ── 選填 ── */}

@@ -55,20 +55,23 @@ function avgFloat(arr: number[]): number {
 }
 
 // ── Sub-components ────────────────────────────────────────────
-function MetricCard({ label, value, sub, color, pct }: {
-  label: string; value: string; sub: string; color: string; pct: number | null;
+function MetricCard({ label, value, sub, color, barColor, pct }: {
+  label: string; value: string; sub: string; color: string; barColor: string; pct: number | null;
 }) {
   return (
-    <div className="bg-white rounded-2xl px-4 py-3 shadow-sm">
-      <p className="text-[10px] text-[#8B7D6B] mb-1">{label}</p>
-      <p className="text-lg font-bold leading-none" style={{ color }}>{value}</p>
-      <p className="text-[10px] text-[#8B7D6B] mt-1">{sub}</p>
-      {pct !== null && (
-        <div className="h-1.5 bg-stone-100 rounded-full mt-2 overflow-hidden">
-          <div className="h-full rounded-full transition-all"
-            style={{ width: `${Math.min(pct * 100, 100)}%`, backgroundColor: color }} />
-        </div>
-      )}
+    <div className="bg-white rounded-2xl shadow-sm overflow-hidden flex">
+      <div className="w-1 shrink-0" style={{ backgroundColor: barColor }} />
+      <div className="flex-1 px-4 py-3">
+        <p className="text-[10px] text-[#8B7D6B] mb-1">{label}</p>
+        <p className="text-lg font-bold leading-none" style={{ color }}>{value}</p>
+        <p className="text-[10px] text-[#8B7D6B] mt-1">{sub}</p>
+        {pct !== null && (
+          <div className="h-1.5 bg-stone-100 rounded-full mt-2 overflow-hidden">
+            <div className="h-full rounded-full transition-all"
+              style={{ width: `${Math.min(pct * 100, 100)}%`, backgroundColor: color }} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -152,21 +155,23 @@ export default function ReportPage() {
               <div className="grid grid-cols-2 gap-2">
                 <MetricCard
                   label="平均飲水" value={`${metrics.water} ml`}
-                  sub="目標 2000 ml" color="#6B9E78" pct={metrics.water / WATER_GOAL}
+                  sub="目標 2000 ml" color="#6B9E78" barColor="#5B8CE8"
+                  pct={metrics.water / WATER_GOAL}
                 />
                 <MetricCard
                   label="平均蛋白質" value={`${metrics.protein} g`}
-                  sub="目標 105 g" color="#D4A24E" pct={metrics.protein / 105}
+                  sub="目標 105 g" color="#D4A24E" barColor="#6B9E78"
+                  pct={metrics.protein / 105}
                 />
                 <MetricCard
                   label="渴望次數" value={`${metrics.cravings} 次/天`}
-                  sub="越低越好" color="#E8734A" pct={null}
+                  sub="越低越好" color="#E8734A" barColor="#E8734A" pct={null}
                 />
                 <MetricCard
                   label="下午精神"
                   value={metrics.energy !== null ? `${metrics.energy} / 5` : "—"}
                   sub={metrics.energy !== null ? "平均評分" : "尚無資料"}
-                  color="#D4A24E"
+                  color="#D4A24E" barColor="#D4A24E"
                   pct={metrics.energy !== null ? metrics.energy / 5 : null}
                 />
               </div>
@@ -223,21 +228,36 @@ export default function ReportPage() {
               <div className="space-y-2">
                 {MILESTONES.map(({ name, emoji, banFrom, banUntil }) => {
                   const elapsed   = daysBetween(banFrom, today);
+                  const total     = banUntil ? daysBetween(banFrom, banUntil) : null;
                   const remaining = banUntil ? daysBetween(today, banUntil) : null;
+                  const pct       = total && total > 0 ? Math.min(elapsed / total, 1) : null;
                   return (
-                    <div key={name} className="bg-white rounded-2xl px-4 py-3 shadow-sm flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-[#1A1A1A]">{emoji} 停食{name}</p>
-                        <p className="text-xs text-[#8B7D6B] mt-0.5">
-                          {remaining !== null
-                            ? remaining > 0 ? `還剩 ${remaining} 天解禁` : "解禁期已到 🎉"
-                            : "永久停食"}
-                        </p>
+                    <div key={name} className="bg-white rounded-2xl px-4 py-3 shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-[#1A1A1A]">{emoji} 停食{name}</p>
+                          <p className="text-xs text-[#8B7D6B] mt-0.5">
+                            {remaining !== null
+                              ? remaining > 0 ? `還剩 ${remaining} 天解禁` : "解禁期已到 🎉"
+                              : "永久停食"}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-2xl font-bold text-[#D4A24E]">{elapsed}</span>
+                          <span className="text-xs text-[#8B7D6B] ml-0.5">天</span>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <span className="text-2xl font-bold text-[#D4A24E]">{elapsed}</span>
-                        <span className="text-xs text-[#8B7D6B] ml-0.5">天</span>
-                      </div>
+                      {pct !== null && (
+                        <div className="mt-2">
+                          <div className="h-1.5 bg-stone-100 rounded-full overflow-hidden">
+                            <div className="h-full rounded-full bg-[#D4A24E] transition-all"
+                              style={{ width: `${pct * 100}%` }} />
+                          </div>
+                          <p className="text-[9px] text-[#8B7D6B] mt-0.5 text-right">
+                            已撐過 {elapsed} 天 / 共 {total} 天
+                          </p>
+                        </div>
+                      )}
                     </div>
                   );
                 })}

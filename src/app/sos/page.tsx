@@ -21,8 +21,6 @@ const ALTERNATIVES = [
 
 const ENCOURAGEMENTS = [
   "你剛剛做了一件很難的事。真的。",
-  "5 分鐘都撐過來了，這份意志力是真的。",
-  "身體謝謝你今天的選擇。",
   "不是完美，是進步。已經很好了。",
   "渴望會過去，但你今天的選擇會留下來。",
 ];
@@ -117,14 +115,13 @@ export default function SosPage() {
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-bold text-[#D4A24E]">🆘 渴望急救</h1>
           {/* Step indicator */}
-          <div className="flex gap-1.5 items-center">
+          <div className="flex gap-2 items-center">
             {[1, 2, 3, 4].map((s) => (
               <div
                 key={s}
                 className="rounded-full transition-all duration-300"
                 style={{
-                  width: s === step ? 20 : 8,
-                  height: 8,
+                  width: 8, height: 8,
                   backgroundColor: s < step ? "#6B9E78" : s === step ? "#D4A24E" : "#E7E0D8",
                 }}
               />
@@ -167,14 +164,11 @@ export default function SosPage() {
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   {timerDone ? (
-                    <span className="text-3xl text-[#6B9E78]">✓</span>
+                    <span className="text-4xl text-[#6B9E78]">✓</span>
                   ) : (
-                    <>
-                      <span className="text-2xl font-bold tabular-nums text-[#D4A24E]">
-                        {formatTime(timeLeft)}
-                      </span>
-                      <span className="text-[10px] text-[#8B7D6B]">分鐘</span>
-                    </>
+                    <span className="font-bold tabular-nums text-[#D4A24E]" style={{ fontSize: 36 }}>
+                      {formatTime(timeLeft)}
+                    </span>
                   )}
                 </div>
               </div>
