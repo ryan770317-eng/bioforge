@@ -87,9 +87,65 @@ function daysUntil(dateStr: string): number {
   return Math.ceil((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 }
 
+// ── Restaurant data ───────────────────────────────────────────
+interface Restaurant {
+  id: string;
+  name: string;
+  emoji: string;
+  safe: string[];
+  avoid: string[];
+}
+
+const RESTAURANTS: Restaurant[] = [
+  {
+    id: "mos",
+    name: "摩斯漢堡",
+    emoji: "🍔",
+    safe:  ["米漢堡（去洋蔥）", "烤雞", "玉米濃湯", "無糖紅茶"],
+    avoid: ["小麥麵包漢堡", "洋蔥圈", "薯條"],
+  },
+  {
+    id: "mcdonalds",
+    name: "麥當勞",
+    emoji: "🍟",
+    safe:  ["嫩煎雞腿排（不夾麵包）", "沙拉", "無糖紅茶"],
+    avoid: ["漢堡麵包", "薯條", "麥克雞塊（裹粉=小麥）"],
+  },
+  {
+    id: "subway",
+    name: "Subway",
+    emoji: "🥗",
+    safe:  ["沙拉碗（不要麵包）", "雞胸肉（避洋蔥）"],
+    avoid: ["麵包體", "美乃滋"],
+  },
+  {
+    id: "kfc",
+    name: "肯德基",
+    emoji: "🍗",
+    safe:  ["烤雞（如有）", "玉米"],
+    avoid: ["炸雞（裹粉=小麥）", "薯條"],
+  },
+  {
+    id: "convenience",
+    name: "便利商店",
+    emoji: "🏪",
+    safe:  ["茶葉蛋", "即食雞胸肉", "無糖豆漿", "地瓜", "無調味堅果（確認無腰果）", "香蕉", "黑咖啡"],
+    avoid: ["麵包／三明治", "鮪魚飯糰", "含糖飲料", "含腰果堅果包", "炸物"],
+  },
+  {
+    id: "buffet",
+    name: "自助餐",
+    emoji: "🍱",
+    safe:  ["白飯（半碗）", "滷雞腿／滷豬肉", "炒高麗菜／炒菠菜", "滷蛋"],
+    avoid: ["炸排骨（裹粉）", "炒洋蔥", "鮪魚料理"],
+  },
+];
+
+// ── Tabs & helpers ────────────────────────────────────────────
+type Mode      = "food" | "restaurant";
 type FilterTab = "all" | FoodStatus;
 
-const TABS: { key: FilterTab; label: string }[] = [
+const FILTER_TABS: { key: FilterTab; label: string }[] = [
   { key: "all",      label: "全部" },
   { key: "banned",   label: "🚫 停食" },
   { key: "rotation", label: "🔄 輪替" },
@@ -102,9 +158,20 @@ function todayLabel(): string {
   return `${d.getMonth() + 1}/${d.getDate()}`;
 }
 
+// ── Page ─────────────────────────────────────────────────────
 export default function ScanPage() {
-  const [query, setQuery] = useState("");
-  const [tab, setTab] = useState<FilterTab>("all");
+  const [mode,     setMode]     = useState<Mode>("food");
+  const [query,    setQuery]    = useState("");
+  const [tab,      setTab]      = useState<FilterTab>("all");
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  function toggleExpand(id: string) {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
 
   const filtered = FOOD_DATABASE
     .filter((f) => f.name.includes(query) && (tab === "all" || f.status === tab))
@@ -112,86 +179,153 @@ export default function ScanPage() {
 
   return (
     <>
-      {/* Fixed header + search + tabs */}
+      {/* ── Fixed header ── */}
       <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-md z-10 bg-[#FFF8F0] px-4 pt-4 pb-2 border-b border-stone-100">
+
         {/* Title row */}
         <div className="flex items-baseline justify-between mb-3">
           <h1 className="text-xl font-bold text-[#D4A24E]">食物安全掃描器</h1>
           <span className="text-xs text-[#8B7D6B]">{todayLabel()}</span>
         </div>
 
-        {/* Search */}
-        <input
-          type="search"
-          placeholder="搜尋食物名稱…"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="w-full bg-white rounded-2xl px-4 py-2.5 text-sm outline-none border border-stone-100 focus:border-[#D4A24E] transition-colors placeholder:text-[#C4B8AC] mb-2.5"
-        />
-
-        {/* Status tabs */}
-        <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-          {TABS.map(({ key, label }) => (
+        {/* Mode tabs */}
+        <div className="flex gap-2 mb-3">
+          {([["food","食物查詢"],["restaurant","外食模式"]] as [Mode, string][]).map(([m, label]) => (
             <button
-              key={key}
-              onClick={() => setTab(key)}
-              className={`shrink-0 text-xs font-medium px-3 py-1 rounded-full transition-colors ${
-                tab === key
-                  ? "bg-[#D4A24E] text-white"
-                  : "bg-white text-[#8B7D6B] border border-stone-100"
-              }`}
-            >
-              {label}
-            </button>
+              key={m}
+              onClick={() => setMode(m)}
+              className="flex-1 py-1.5 rounded-full text-xs font-semibold transition-colors"
+              style={mode === m
+                ? { backgroundColor: "#D4A24E", color: "#fff" }
+                : { backgroundColor: "#fff", color: "#8B7D6B", border: "1px solid #F0EBE4" }}
+            >{label}</button>
           ))}
         </div>
+
+        {/* Food mode: search + filter tabs */}
+        {mode === "food" && (
+          <>
+            <input
+              type="search"
+              placeholder="搜尋食物名稱…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="w-full bg-white rounded-2xl px-4 py-2.5 text-sm outline-none border border-stone-100 focus:border-[#D4A24E] transition-colors placeholder:text-[#C4B8AC] mb-2.5"
+            />
+            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+              {FILTER_TABS.map(({ key, label }) => (
+                <button
+                  key={key}
+                  onClick={() => setTab(key)}
+                  className={`shrink-0 text-xs font-medium px-3 py-1 rounded-full transition-colors ${
+                    tab === key ? "bg-[#D4A24E] text-white" : "bg-white text-[#8B7D6B] border border-stone-100"
+                  }`}
+                >{label}</button>
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
-      {/* Card list */}
-      <main className="pt-[152px] pb-24 px-4 max-w-md mx-auto">
-        {filtered.length === 0 ? (
-          <p className="text-center text-[#8B7D6B] text-sm pt-12">
-            {query ? `找不到「${query}」` : "此分類目前沒有食物"}
-          </p>
-        ) : (
-          <ul className="space-y-1.5 pt-2">
-            {filtered.map((food) => {
-              const cfg = STATUS_CONFIG[food.status];
-              const days = food.banUntil ? daysUntil(food.banUntil) : null;
-              const isSafe = food.status === "safe";
-              return (
-                <li
-                  key={food.name}
-                  className={`rounded-2xl px-4 py-2.5 shadow-sm ${isSafe ? "bg-[#6B9E780D]" : "bg-white"}`}
+      {/* ── Content ── */}
+      {mode === "food" ? (
+        <main className="pt-[204px] pb-24 px-4 max-w-md mx-auto">
+          {filtered.length === 0 ? (
+            <p className="text-center text-[#8B7D6B] text-sm pt-12">
+              {query ? `找不到「${query}」` : "此分類目前沒有食物"}
+            </p>
+          ) : (
+            <ul className="space-y-1.5 pt-2">
+              {filtered.map((food) => {
+                const cfg  = STATUS_CONFIG[food.status];
+                const days = food.banUntil ? daysUntil(food.banUntil) : null;
+                return (
+                  <li
+                    key={food.name}
+                    className={`rounded-2xl px-4 py-2.5 shadow-sm ${food.status === "safe" ? "bg-[#6B9E780D]" : "bg-white"}`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium text-[#1A1A1A]">{food.name}</span>
+                      <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full whitespace-nowrap ${cfg.bg} ${cfg.text}`}>
+                        {cfg.label}
+                      </span>
+                    </div>
+                    {food.status === "banned" && days !== null && (
+                      <p className={`text-xs mt-0.5 ${days > 0 ? "text-[#E8734A]" : "text-[#6B9E78]"}`}>
+                        {days > 0 ? `還剩 ${days} 天` : "停食期已到"}
+                      </p>
+                    )}
+                    {food.status === "rotation" && food.rotationDays && (
+                      <p className="text-xs text-[#D4A24E] mt-0.5">每 {food.rotationDays} 天 1 次</p>
+                    )}
+                    {food.note && (
+                      <p className="text-xs text-[#8B7D6B] mt-0.5">{food.note}</p>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </main>
+      ) : (
+        <main className="pt-[112px] pb-24 px-4 max-w-md mx-auto space-y-2 pt-2">
+          {RESTAURANTS.map((r) => {
+            const open = expanded.has(r.id);
+            return (
+              <div key={r.id} className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                {/* Restaurant header */}
+                <button
+                  onClick={() => toggleExpand(r.id)}
+                  className="w-full flex items-center justify-between px-4 py-3.5"
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-medium text-[#1A1A1A]">{food.name}</span>
-                    <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full whitespace-nowrap ${cfg.bg} ${cfg.text}`}>
-                      {cfg.label}
+                  <span className="text-sm font-semibold text-[#1A1A1A]">
+                    {r.emoji} {r.name}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-[#8B7D6B]">
+                      ✅{r.safe.length} 🚫{r.avoid.length}
                     </span>
+                    <span
+                      className="text-[#8B7D6B] text-xs transition-transform inline-block"
+                      style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
+                    >▾</span>
                   </div>
+                </button>
 
-                  {food.status === "banned" && days !== null && (
-                    <p className={`text-xs mt-0.5 ${days > 0 ? "text-[#E8734A]" : "text-[#6B9E78]"}`}>
-                      {days > 0 ? `還剩 ${days} 天` : "停食期已到"}
-                    </p>
-                  )}
-
-                  {food.status === "rotation" && food.rotationDays && (
-                    <p className="text-xs text-[#D4A24E] mt-0.5">
-                      每 {food.rotationDays} 天 1 次
-                    </p>
-                  )}
-
-                  {food.note && (
-                    <p className="text-xs text-[#8B7D6B] mt-0.5">{food.note}</p>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </main>
+                {/* Expanded content */}
+                {open && (
+                  <div className="px-4 pb-4 border-t border-stone-50 space-y-3 pt-3">
+                    {/* Safe items */}
+                    <div>
+                      <p className="text-[10px] font-semibold text-[#6B9E78] uppercase tracking-wide mb-1.5">✅ 可以吃</p>
+                      <ul className="space-y-1">
+                        {r.safe.map((item) => (
+                          <li key={item} className="flex items-start gap-2">
+                            <span className="text-[#6B9E78] text-xs mt-0.5 shrink-0">●</span>
+                            <span className="text-sm text-[#1A1A1A]">{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    {/* Avoid items */}
+                    <div>
+                      <p className="text-[10px] font-semibold text-[#E8734A] uppercase tracking-wide mb-1.5">🚫 避開</p>
+                      <ul className="space-y-1">
+                        {r.avoid.map((item) => (
+                          <li key={item} className="flex items-start gap-2">
+                            <span className="text-[#E8734A] text-xs mt-0.5 shrink-0">●</span>
+                            <span className="text-sm text-[#8B7D6B]">{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </main>
+      )}
 
       <BottomNav />
     </>
