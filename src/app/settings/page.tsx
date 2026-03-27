@@ -39,10 +39,15 @@ function SettingRow({ label, value, onChange, type = "text" }: {
 function NotifToggleRow({ label, storageKey, defaultVal, onChange }: {
   label: string; storageKey: string; defaultVal: boolean; onChange?: () => void;
 }) {
-  const [on, setOn] = useState(() => {
-    try { const v = localStorage.getItem(storageKey); return v === null ? defaultVal : v === "true"; }
-    catch { return defaultVal; }
-  });
+  const [on, setOn] = useState(defaultVal);
+
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem(storageKey);
+      if (v !== null) setOn(v === "true");
+    } catch {}
+  }, [storageKey]);
+
   function toggle() {
     const next = !on;
     setOn(next);
@@ -69,10 +74,14 @@ function NotifToggleRow({ label, storageKey, defaultVal, onChange }: {
 function NotifTimeRow({ label, storageKey, defaultTime, onChange }: {
   label: string; storageKey: string; defaultTime: string; onChange?: () => void;
 }) {
-  const [time, setTime] = useState(() => {
-    try { return localStorage.getItem(storageKey) ?? defaultTime; }
-    catch { return defaultTime; }
-  });
+  const [time, setTime] = useState(defaultTime);
+
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem(storageKey);
+      if (v !== null) setTime(v);
+    } catch {}
+  }, [storageKey]);
   function handleChange(v: string) {
     setTime(v);
     try { localStorage.setItem(storageKey, v); } catch {}
