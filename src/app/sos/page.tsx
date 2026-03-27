@@ -193,7 +193,7 @@ export default function SosPage() {
               {timerDone ? (
                 <button
                   onClick={() => setStep(2)}
-                  className="px-8 py-2.5 rounded-full text-sm font-semibold text-white bg-[#6B9E78] active:opacity-80 transition-opacity"
+                  className="px-8 py-2.5 rounded-full text-sm font-semibold text-[#1a1a1a] bg-[#6B9E78] active:opacity-80 transition-opacity"
                 >
                   水喝完了，繼續 →
                 </button>
@@ -201,15 +201,15 @@ export default function SosPage() {
                 <div className="flex gap-3">
                   <button
                     onClick={() => setTimerRunning((v) => !v)}
-                    className="px-6 py-2.5 rounded-full text-sm font-semibold text-white active:opacity-80 transition-opacity"
-                    style={{ backgroundColor: timerRunning ? "#E8734A" : "#e9f955" }}
+                    className="px-6 py-2.5 rounded-full text-sm font-semibold text-[#1a1a1a] active:opacity-80 transition-opacity"
+                    style={{ backgroundColor: timerRunning ? "#e0e0e0" : "#e9f955" }}
                   >
                     {timerRunning ? "暫停" : timeLeft === TIMER_SECONDS ? "開始計時" : "繼續"}
                   </button>
                   {timeLeft < TIMER_SECONDS && (
                     <button
                       onClick={resetTimer}
-                      className="px-4 py-2.5 rounded-full text-sm font-medium text-[#8B7D6B] border border-stone-200 active:opacity-70 transition-opacity"
+                      className="px-4 py-2.5 rounded-full text-sm font-medium text-[#1a1a1a] bg-[#e0e0e0] active:opacity-70 transition-opacity"
                     >
                       重置
                     </button>

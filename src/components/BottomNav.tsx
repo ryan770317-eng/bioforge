@@ -1,15 +1,16 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Search, Zap, CheckSquare, BarChart2, Pill, Settings } from "lucide-react";
+import { LayoutDashboard, Search, Zap, CheckSquare, BarChart2, Pill, Settings } from "lucide-react";
 
 const NAV_ITEMS = [
-  { href: "/scan",        Icon: Search,       label: "食物掃描" },
-  { href: "/sos",         Icon: Zap,          label: "渴望急救" },
-  { href: "/today",       Icon: CheckSquare,  label: "今日打卡" },
-  { href: "/report",      Icon: BarChart2,    label: "週報" },
-  { href: "/supplements", Icon: Pill,         label: "保健品" },
-  { href: "/settings",    Icon: Settings,     label: "設定" },
+  { href: "/dashboard",   Icon: LayoutDashboard, label: "總覽" },
+  { href: "/scan",        Icon: Search,           label: "食物掃描" },
+  { href: "/sos",         Icon: Zap,              label: "渴望急救" },
+  { href: "/today",       Icon: CheckSquare,      label: "今日打卡" },
+  { href: "/report",      Icon: BarChart2,         label: "週報" },
+  { href: "/supplements", Icon: Pill,             label: "保健品" },
+  { href: "/settings",    Icon: Settings,         label: "設定" },
 ];
 
 export default function BottomNav() {
@@ -54,7 +55,7 @@ export default function BottomNav() {
         {/* Logo */}
         <div className="px-5 mb-8 flex items-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="BioHACKING" className="h-9 w-auto" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+          <img src="/logo.png" alt="BioHACKING" className="h-12 w-auto" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
         </div>
 
         {/* Nav items */}
