@@ -45,16 +45,25 @@ function calcTDEE(heightCm: number, weightKg: number) {
 }
 
 // ── Sub-components ─────────────────────────────────────────────
-function HealthCard({ label, value, unit, sub, color }: {
+function HealthCard({ label, value, unit, sub, color, onApply }: {
   label: string; value: string; unit: string; sub: string; color: string;
+  onApply?: () => void;
 }) {
   return (
-    <div className="bg-white rounded-2xl shadow-sm px-4 py-3">
-      <p className="text-[10px] text-[#8B7D6B] mb-1">{label}</p>
+    <div className="bg-white rounded-2xl shadow-sm px-4 py-3 flex flex-col gap-1">
+      <p className="text-[10px] text-[#8B7D6B]">{label}</p>
       <p className="text-lg font-bold leading-none" style={{ color }}>
         {value}<span className="text-xs font-normal text-[#8B7D6B] ml-1">{unit}</span>
       </p>
-      <p className="text-[10px] text-[#8B7D6B] mt-1 leading-snug">{sub}</p>
+      <p className="text-[10px] text-[#8B7D6B] leading-snug">{sub}</p>
+      {onApply && (
+        <button
+          onClick={onApply}
+          className="mt-1 self-start text-[10px] font-medium text-[#D4A24E] border border-[#D4A24E] rounded-full px-2 py-0.5 active:opacity-70 transition-opacity"
+        >
+          套用建議值
+        </button>
+      )}
     </div>
   );
 }
@@ -266,6 +275,7 @@ export default function SettingsPage() {
                 unit="g"
                 sub={`體重 × 1.6g｜你的目標 ${isNaN(pg) ? proteinGoal : pg}g`}
                 color={!isNaN(pg) && pg >= recProtein ? "#6B9E78" : "#E8734A"}
+                onApply={() => setProteinGoal(String(recProtein))}
               />
               <HealthCard
                 label="每日飲水建議"
@@ -273,6 +283,7 @@ export default function SettingsPage() {
                 unit="ml"
                 sub={`體重 × 35ml`}
                 color="#5B8CE8"
+                onApply={() => setWaterGoal(String(recWater))}
               />
               <HealthCard
                 label="TDEE 參考"
