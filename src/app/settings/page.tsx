@@ -16,6 +16,8 @@ const INITIAL_BAN: BanItem[] = [
   { name: "鮪魚",   emoji: "🐟", banUntil: "2026-06-20" },
 ];
 
+const BAN_STORAGE_KEY = "ban_items_v1";
+
 const SETTING_KEYS = ["name","height_cm","weight_kg","protein_goal_g","water_goal_ml"] as const;
 const AGE = 38;
 
@@ -75,6 +77,8 @@ export default function SettingsPage() {
   const [proteinGoal, setProteinGoal] = useState("105");
   const [waterGoal,   setWaterGoal]   = useState("2000");
   const [banItems,    setBanItems]    = useState<BanItem[]>(INITIAL_BAN);
+  const [newBanName,  setNewBanName]  = useState("");
+  const [newBanDate,  setNewBanDate]  = useState("");
   const [saving,      setSaving]      = useState(false);
   const [saved,       setSaved]       = useState(false);
 
@@ -102,6 +106,11 @@ export default function SettingsPage() {
       });
 
     isPushSubscribed().then(setPushSubscribed);
+
+    try {
+      const stored = localStorage.getItem(BAN_STORAGE_KEY);
+      if (stored) setBanItems(JSON.parse(stored));
+    } catch {}
 
     try {
       if (localStorage.getItem("notif_pref_v") !== "3") {
@@ -136,8 +145,25 @@ export default function SettingsPage() {
     setTimeout(() => setSaved(false), 3000);
   }
 
+  function saveBan(items: BanItem[]) {
+    try { localStorage.setItem(BAN_STORAGE_KEY, JSON.stringify(items)); } catch {}
+    setBanItems(items);
+  }
+
   function updateBanDate(index: number, date: string) {
-    setBanItems((prev) => prev.map((item, i) => (i === index ? { ...item, banUntil: date } : item)));
+    saveBan(banItems.map((item, i) => (i === index ? { ...item, banUntil: date } : item)));
+  }
+
+  function addBanItem() {
+    const name = newBanName.trim();
+    if (!name) return;
+    saveBan([...banItems, { name, emoji: "🚫", banUntil: newBanDate }]);
+    setNewBanName("");
+    setNewBanDate("");
+  }
+
+  function removeBanItem(index: number) {
+    saveBan(banItems.filter((_, i) => i !== index));
   }
 
   async function handlePushToggle() {
@@ -320,22 +346,52 @@ export default function SettingsPage() {
           <h2 className="text-xs font-semibold text-[#8B7D6B] uppercase tracking-wide mb-2 px-1">停食日期管理</h2>
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden divide-y divide-stone-50">
             {banItems.map((item, i) => (
-              <div key={item.name} className="flex items-center justify-between px-4 py-3">
-                <span className="text-sm text-[#1A1A1A]">{item.emoji} {item.name}</span>
-                {item.banUntil ? (
-                  <input
-                    type="date"
-                    value={item.banUntil}
-                    onChange={(e) => updateBanDate(i, e.target.value)}
-                    className="text-sm text-[#1a1a1a] outline-none bg-transparent"
-                  />
-                ) : (
-                  <span className="text-xs font-medium text-[#E8734A] bg-[#FDECEA] px-2.5 py-0.5 rounded-full">永久停食</span>
-                )}
+              <div key={`${item.name}-${i}`} className="flex items-center justify-between px-4 py-3 gap-2">
+                <span className="text-sm text-[#1A1A1A] flex-1 min-w-0 truncate">{item.emoji} {item.name}</span>
+                <div className="flex items-center gap-2 shrink-0">
+                  {item.banUntil ? (
+                    <input
+                      type="date"
+                      value={item.banUntil}
+                      onChange={(e) => updateBanDate(i, e.target.value)}
+                      className="text-sm text-[#1a1a1a] outline-none bg-transparent"
+                    />
+                  ) : (
+                    <span className="text-xs font-medium text-[#E8734A] bg-[#FDECEA] px-2.5 py-0.5 rounded-full">永久停食</span>
+                  )}
+                  <button
+                    onClick={() => removeBanItem(i)}
+                    className="text-[#C4B8AC] hover:text-[#E8734A] transition-colors text-base leading-none"
+                    aria-label="刪除"
+                  >×</button>
+                </div>
               </div>
             ))}
+            {/* Add new row */}
+            <div className="flex items-center gap-2 px-4 py-3">
+              <input
+                type="text"
+                placeholder="食物名稱"
+                value={newBanName}
+                onChange={(e) => setNewBanName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addBanItem()}
+                className="flex-1 min-w-0 text-sm text-[#1a1a1a] placeholder:text-[#C4B8AC] outline-none bg-transparent"
+              />
+              <input
+                type="date"
+                value={newBanDate}
+                onChange={(e) => setNewBanDate(e.target.value)}
+                className="text-sm text-[#1a1a1a] outline-none bg-transparent shrink-0"
+              />
+              <button
+                onClick={addBanItem}
+                disabled={!newBanName.trim()}
+                className="shrink-0 text-xs font-semibold px-3 py-1 rounded-full transition-opacity"
+                style={{ backgroundColor: "#e9f955", color: "#1a1a1a", opacity: newBanName.trim() ? 1 : 0.4 }}
+              >新增</button>
+            </div>
           </div>
-          <p className="text-[10px] text-[#8B7D6B] mt-1.5 px-1">點日期可修改解禁時間</p>
+          <p className="text-[10px] text-[#8B7D6B] mt-1.5 px-1">點日期可修改解禁時間・右側 × 可刪除</p>
         </section>
 
         {/* Notifications */}

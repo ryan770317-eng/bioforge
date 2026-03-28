@@ -8,6 +8,7 @@ interface SupplementItem {
   name: string;
   dose: string;
   note: string;
+  custom?: boolean;
 }
 
 interface SupplementGroup {
@@ -16,7 +17,7 @@ interface SupplementGroup {
   items: SupplementItem[];
 }
 
-const SUPPLEMENT_GROUPS: SupplementGroup[] = [
+const FIXED_GROUPS: SupplementGroup[] = [
   {
     icon: "🌅",
     label: "早餐",
@@ -38,6 +39,29 @@ const SUPPLEMENT_GROUPS: SupplementGroup[] = [
   },
 ];
 
+type GroupLabel = "早餐" | "晚餐";
+
+interface CustomSupplement {
+  id: string;
+  group: GroupLabel;
+  name: string;
+  dose: string;
+  note: string;
+}
+
+const CUSTOM_KEY = "custom_supplements_v1";
+
+function loadCustom(): CustomSupplement[] {
+  try {
+    const s = localStorage.getItem(CUSTOM_KEY);
+    return s ? JSON.parse(s) : [];
+  } catch { return []; }
+}
+
+function saveCustom(items: CustomSupplement[]) {
+  try { localStorage.setItem(CUSTOM_KEY, JSON.stringify(items)); } catch {}
+}
+
 function todayDate(): string {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -49,10 +73,16 @@ function todayLabel(): string {
 }
 
 export default function SupplementsPage() {
-  const [checked, setChecked] = useState<Set<string>>(new Set());
+  const [checked,    setChecked]    = useState<Set<string>>(new Set());
+  const [customs,    setCustoms]    = useState<CustomSupplement[]>([]);
+  const [addOpen,    setAddOpen]    = useState(false);
+  const [newName,    setNewName]    = useState("");
+  const [newDose,    setNewDose]    = useState("");
+  const [newNote,    setNewNote]    = useState("");
+  const [newGroup,   setNewGroup]   = useState<GroupLabel>("早餐");
 
-  // Load today's taken supplements on mount
   useEffect(() => {
+    setCustoms(loadCustom());
     supabase
       .from("supplement_logs")
       .select("supplement_name")
@@ -63,9 +93,19 @@ export default function SupplementsPage() {
       });
   }, []);
 
+  // Merge fixed + custom groups
+  const groups: SupplementGroup[] = FIXED_GROUPS.map((g) => ({
+    ...g,
+    items: [
+      ...g.items,
+      ...customs.filter((c) => c.group === g.label).map((c) => ({
+        id: c.id, name: c.name, dose: c.dose, note: c.note, custom: true,
+      })),
+    ],
+  }));
+
   async function toggle(id: string) {
     const nextTaken = !checked.has(id);
-    // Optimistic update
     setChecked((prev) => {
       const next = new Set(prev);
       nextTaken ? next.add(id) : next.delete(id);
@@ -79,18 +119,96 @@ export default function SupplementsPage() {
       );
   }
 
+  function addCustom() {
+    const name = newName.trim();
+    if (!name) return;
+    const item: CustomSupplement = {
+      id: `custom-${Date.now()}`,
+      group: newGroup,
+      name,
+      dose: newDose.trim() || "依標示",
+      note: newNote.trim(),
+    };
+    const next = [...customs, item];
+    saveCustom(next);
+    setCustoms(next);
+    setNewName(""); setNewDose(""); setNewNote("");
+    setAddOpen(false);
+  }
+
+  function removeCustom(id: string) {
+    const next = customs.filter((c) => c.id !== id);
+    saveCustom(next);
+    setCustoms(next);
+  }
+
   return (
     <>
       {/* Fixed header */}
       <div className="fixed top-0 left-0 right-0 md:left-[200px] z-10 bg-[#ebebeb] px-4 pt-4 pb-3 border-b border-stone-100">
-        <div className="flex items-baseline justify-between">
+        <div className="max-w-2xl mx-auto flex items-baseline justify-between">
           <h1 className="text-xl font-bold text-[#1a1a1a]">保健品</h1>
-          <span className="text-xs text-[#8B7D6B]">{todayLabel()}</span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-[#8B7D6B]">{todayLabel()}</span>
+            <button
+              onClick={() => setAddOpen((v) => !v)}
+              className="text-xs font-semibold px-3 py-1.5 rounded-full transition-opacity active:opacity-70"
+              style={{ backgroundColor: "#e9f955", color: "#1a1a1a" }}
+            >{addOpen ? "取消" : "+ 新增"}</button>
+          </div>
         </div>
       </div>
 
       <main className="pt-[68px] pb-24 px-4 w-full max-w-2xl mx-auto space-y-5">
-        {SUPPLEMENT_GROUPS.map((group) => {
+
+        {/* Add form */}
+        {addOpen && (
+          <section className="bg-white rounded-2xl shadow-sm px-4 py-4 space-y-3">
+            <h3 className="text-sm font-semibold text-[#1A1A1A]">新增保健品</h3>
+            <div className="flex gap-2">
+              {(["早餐", "晚餐"] as GroupLabel[]).map((g) => (
+                <button
+                  key={g}
+                  onClick={() => setNewGroup(g)}
+                  className="flex-1 py-1.5 rounded-full text-xs font-semibold transition-colors"
+                  style={newGroup === g
+                    ? { backgroundColor: "#e9f955", color: "#1a1a1a" }
+                    : { backgroundColor: "#f5f5f5", color: "#8B7D6B" }}
+                >{g}</button>
+              ))}
+            </div>
+            <input
+              type="text"
+              placeholder="品名（必填）"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              className="w-full text-sm border border-stone-200 rounded-xl px-3 py-2.5 outline-none focus:border-[#e9f955] transition-colors"
+            />
+            <input
+              type="text"
+              placeholder="劑量（如：1 顆）"
+              value={newDose}
+              onChange={(e) => setNewDose(e.target.value)}
+              className="w-full text-sm border border-stone-200 rounded-xl px-3 py-2.5 outline-none focus:border-[#e9f955] transition-colors"
+            />
+            <input
+              type="text"
+              placeholder="備注（可空白）"
+              value={newNote}
+              onChange={(e) => setNewNote(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && addCustom()}
+              className="w-full text-sm border border-stone-200 rounded-xl px-3 py-2.5 outline-none focus:border-[#e9f955] transition-colors"
+            />
+            <button
+              onClick={addCustom}
+              disabled={!newName.trim()}
+              className="w-full py-2.5 rounded-full text-sm font-semibold transition-opacity"
+              style={{ backgroundColor: "#e9f955", color: "#1a1a1a", opacity: newName.trim() ? 1 : 0.4 }}
+            >加入清單</button>
+          </section>
+        )}
+
+        {groups.map((group) => {
           const doneCount = group.items.filter((i) => checked.has(i.id)).length;
           return (
             <section key={group.label}>
@@ -128,8 +246,15 @@ export default function SupplementsPage() {
                           {item.name}
                         </p>
                         <p className={`text-xs mt-0.5 ${done ? "text-[#8B7D6B]/60" : "text-[#1a1a1a]"}`}>{item.dose}</p>
-                        <p className={`text-xs mt-0.5 ${done ? "text-[#8B7D6B]/60" : "text-[#8B7D6B]"}`}>{item.note}</p>
+                        {item.note && <p className={`text-xs mt-0.5 ${done ? "text-[#8B7D6B]/60" : "text-[#8B7D6B]"}`}>{item.note}</p>}
                       </div>
+                      {item.custom && (
+                        <button
+                          onClick={() => removeCustom(item.id)}
+                          className="shrink-0 text-[#C4B8AC] hover:text-[#E8734A] transition-colors text-base leading-none mt-0.5"
+                          aria-label="刪除"
+                        >×</button>
+                      )}
                     </li>
                   );
                 })}

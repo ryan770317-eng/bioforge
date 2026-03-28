@@ -236,7 +236,7 @@ export default function TodayPage() {
               );
             })}
           </div>
-          <ProgressBar value={waterMl} goal={waterGoal} gradient="linear-gradient(to right, #D4A24E, #E8B96A)" />
+          <ProgressBar value={waterMl} goal={waterGoal} gradient="#5B8CE8" doneColor="#5B8CE8" />
           {waterDone && <p className="text-xs text-[#6B9E78] font-medium mt-1.5 text-center">🎉 今日達標！</p>}
         </section>
 
