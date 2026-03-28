@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/lib/supabase";
-import { scheduleBreakfast, scheduleDinner } from "@/lib/notifications";
+import { scheduleBreakfast, scheduleDinner, subscribePush, unsubscribePush, isPushSubscribed, requestPermission } from "@/lib/notifications";
 
 interface BanItem {
   name: string;
@@ -83,6 +83,8 @@ export default function SettingsPage() {
   const [dinnerEnabled,    setDinnerEnabled]    = useState(true);
   const [breakfastTime,    setBreakfastTime]    = useState("08:00");
   const [dinnerTime,       setDinnerTime]       = useState("18:30");
+  const [pushSubscribed,   setPushSubscribed]   = useState(false);
+  const [pushLoading,      setPushLoading]      = useState(false);
 
   useEffect(() => {
     supabase
@@ -98,6 +100,8 @@ export default function SettingsPage() {
         if (map.has("protein_goal_g")) setProteinGoal(map.get("protein_goal_g")!);
         if (map.has("water_goal_ml"))  setWaterGoal(map.get("water_goal_ml")!);
       });
+
+    isPushSubscribed().then(setPushSubscribed);
 
     try {
       if (localStorage.getItem("notif_pref_v") !== "3") {
@@ -134,6 +138,21 @@ export default function SettingsPage() {
 
   function updateBanDate(index: number, date: string) {
     setBanItems((prev) => prev.map((item, i) => (i === index ? { ...item, banUntil: date } : item)));
+  }
+
+  async function handlePushToggle() {
+    setPushLoading(true);
+    if (pushSubscribed) {
+      await unsubscribePush();
+      setPushSubscribed(false);
+    } else {
+      const granted = await requestPermission();
+      if (granted) {
+        const ok = await subscribePush();
+        setPushSubscribed(ok);
+      }
+    }
+    setPushLoading(false);
   }
 
   function handleBreakfastEnabled(val: boolean) {
@@ -323,6 +342,24 @@ export default function SettingsPage() {
         <section>
           <h2 className="text-xs font-semibold text-[#8B7D6B] uppercase tracking-wide mb-2 px-1">推播通知</h2>
           <div className="bg-white rounded-2xl shadow-sm overflow-hidden divide-y divide-stone-50">
+            <div className="flex items-center justify-between px-4 py-3">
+              <div>
+                <p className="text-sm text-[#1A1A1A] font-medium">背景推播（App 關閉也能收到）</p>
+                <p className="text-[10px] text-[#8B7D6B] mt-0.5">{pushSubscribed ? "已啟用 · 每日 08:00 / 18:30 推送" : "未啟用"}</p>
+              </div>
+              <button
+                onClick={handlePushToggle}
+                disabled={pushLoading}
+                className="text-xs font-semibold px-3 py-1.5 rounded-full transition-opacity active:opacity-70"
+                style={{
+                  backgroundColor: pushSubscribed ? "#f0f0f0" : "#e9f955",
+                  color: "#1a1a1a",
+                  opacity: pushLoading ? 0.5 : 1,
+                }}
+              >
+                {pushLoading ? "處理中…" : pushSubscribed ? "取消訂閱" : "啟用推播"}
+              </button>
+            </div>
             <div className="flex items-center justify-between px-4 py-3">
               <span className="text-sm text-[#1A1A1A]">🌅 早餐保健品提醒</span>
               <label className="relative inline-flex items-center cursor-pointer">
