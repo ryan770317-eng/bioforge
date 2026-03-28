@@ -267,9 +267,9 @@ export default function TodayPage() {
               value={customG}
               onChange={(e) => setCustomG(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && submitCustom()}
-              className="flex-1 bg-stone-50 rounded-xl px-3 py-2 text-sm outline-none border border-stone-100 focus:border-[#e9f955] transition-colors placeholder:text-[#C4B8AC]"
+              className="min-w-0 flex-1 bg-stone-50 rounded-xl px-3 py-2 text-sm outline-none border border-stone-100 focus:border-[#e9f955] transition-colors placeholder:text-[#C4B8AC]"
             />
-            <button onClick={submitCustom} className="px-4 py-2 rounded-xl bg-[#e9f955] text-[#1a1a1a] text-sm font-medium active:opacity-80 transition-opacity">加入</button>
+            <button onClick={submitCustom} className="shrink-0 px-4 py-2 rounded-xl bg-[#e9f955] text-[#1a1a1a] text-sm font-semibold active:opacity-80 transition-opacity">加入</button>
           </div>
           {protein > 0 && (
             <button onClick={() => handleProtein(0)} className="mt-2 text-xs text-[#8B7D6B]/60 underline">重置</button>

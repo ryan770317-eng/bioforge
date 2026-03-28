@@ -189,12 +189,12 @@ export default function ReportPage() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <MetricCard
                   label="平均飲水" value={`${metrics.water} ml`}
-                  sub="目標 2000 ml" color="#6B9E78" barColor="#5B8CE8"
+                  sub={`目標 ${WATER_GOAL} ml`} color="#5B8CE8" barColor="#5B8CE8"
                   pct={metrics.water / WATER_GOAL}
                 />
                 <MetricCard
                   label="平均蛋白質" value={`${metrics.protein} g`}
-                  sub="目標 105 g" color="#e9f955" barColor="#6B9E78"
+                  sub="目標 105 g" color="#6B9E78" barColor="#6B9E78"
                   pct={metrics.protein / 105}
                 />
                 <MetricCard
@@ -205,7 +205,7 @@ export default function ReportPage() {
                   label="下午精神"
                   value={metrics.energy !== null ? `${metrics.energy} / 5` : "—"}
                   sub={metrics.energy !== null ? "平均評分" : "尚無資料"}
-                  color="#e9f955" barColor="#e9f955"
+                  color="#D4A24E" barColor="#D4A24E"
                   pct={metrics.energy !== null ? metrics.energy / 5 : null}
                 />
               </div>
@@ -226,7 +226,7 @@ export default function ReportPage() {
                           <div className="w-full rounded-t-md transition-all"
                             style={{
                               height: ml > 0 ? `${pct * 100}%` : "3px",
-                              backgroundColor: isToday ? "#e9f955" : reached ? "#6B9E78" : ml > 0 ? "#D4A24E4D" : "#F0EBE4",
+                              backgroundColor: isToday ? "#e9f955" : reached ? "#6B9E78" : ml > 0 ? "#D1CBC4" : "#F0EBE4",
                             }}
                           />
                         </div>
@@ -240,7 +240,7 @@ export default function ReportPage() {
                   <span className="text-[9px] text-[#8B7D6B]">目標 {WATER_GOAL} ml</span>
                 </div>
                 <div className="flex gap-4 mt-2 px-0.5">
-                  {[["#6B9E78","達標"],["#e9f955","今天"],["#D4A24E4D","未達標"]].map(([c,l]) => (
+                  {[["#6B9E78","達標"],["#e9f955","今天"],["#D1CBC4","未達標"]].map(([c,l]) => (
                     <div key={l} className="flex items-center gap-1">
                       <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: c }} />
                       <span className="text-[9px] text-[#8B7D6B]">{l}</span>
@@ -261,7 +261,7 @@ export default function ReportPage() {
                           <div className="w-full rounded-t-md transition-all"
                             style={{
                               height: avg > 0 ? `${Math.min(pct * 100, 100)}%` : "3px",
-                              backgroundColor: reached ? "#6B9E78" : avg > 0 ? "#D4A24E4D" : "#F0EBE4",
+                              backgroundColor: reached ? "#6B9E78" : avg > 0 ? "#D1CBC4" : "#F0EBE4",
                             }}
                           />
                         </div>
@@ -288,7 +288,7 @@ export default function ReportPage() {
                           <div className="w-full rounded-t-md transition-all"
                             style={{
                               height: avg > 0 ? `${Math.min(pct * 100, 100)}%` : "3px",
-                              backgroundColor: reached ? "#6B9E78" : avg > 0 ? "#D4A24E4D" : "#F0EBE4",
+                              backgroundColor: reached ? "#6B9E78" : avg > 0 ? "#D1CBC4" : "#F0EBE4",
                             }}
                           />
                         </div>

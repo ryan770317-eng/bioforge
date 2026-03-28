@@ -29,7 +29,7 @@ const FOOD_DATABASE: FoodItem[] = [
   { name: "蔥",     ige: 0,  igg: 1930,  iggGrade: 0, status: "observe", note: "接近1級門檻" },
   { name: "葵花籽", ige: 0,  igg: 1796,  iggGrade: 0, status: "observe" },
   { name: "蘿蔔",   ige: 267,igg: 1342,  iggGrade: 0, status: "observe", note: "IgE+IgG 雙重反應" },
-  { name: "鮭魚",   ige: 0,  igg: 1195,  iggGrade: 0, status: "observe", note: "不作為主要 Omega-3 來源，≤2次/週" },
+  { name: "鮭魚",   ige: 0,  igg: 1195,  iggGrade: 0, status: "observe", note: "≤2次/週" },
   { name: "豌豆",   ige: 0,  igg: 1042,  iggGrade: 0, status: "observe" },
   { name: "杏仁",   ige: 0,  igg: 930,   iggGrade: 0, status: "observe", note: "≤2次/週" },
   { name: "蕎麥",   ige: 0,  igg: 880,   iggGrade: 0, status: "observe", note: "≤2次/週" },
@@ -73,10 +73,16 @@ const FOOD_DATABASE: FoodItem[] = [
 const STATUS_ORDER: FoodStatus[] = ["banned", "rotation", "observe", "safe"];
 
 const STATUS_CONFIG: Record<FoodStatus, { label: string; dot: string; text: string; cardBg: string }> = {
-  safe:     { label: "安全",  dot: "#6B9E78", text: "#6B9E78", cardBg: "#F0FFF4" },
-  rotation: { label: "輪替",  dot: "#D4A24E", text: "#D4A24E", cardBg: "#FFFBF0" },
-  observe:  { label: "觀察",  dot: "#8B7D6B", text: "#8B7D6B", cardBg: "#FFFDF0" },
-  banned:   { label: "停食",  dot: "#E8734A", text: "#E8734A", cardBg: "#FFF0ED" },
+  safe:     { label: "安全", dot: "#6B9E78", text: "#6B9E78", cardBg: "#F0FFF4" },
+  rotation: { label: "輪替", dot: "#D4A24E", text: "#D4A24E", cardBg: "#FFFBF0" },
+  observe:  { label: "觀察", dot: "#8B7D6B", text: "#8B7D6B", cardBg: "#FFFDF0" },
+  banned:   { label: "停食", dot: "#E8734A", text: "#E8734A", cardBg: "#FFF0ED" },
+};
+
+const AI_VERDICT_CONFIG: Record<string, { bg: string; text: string; dot: string }> = {
+  安全: { bg: "#F0FFF4", text: "#6B9E78", dot: "#6B9E78" },
+  小心: { bg: "#FFFBF0", text: "#D4A24E", dot: "#D4A24E" },
+  停食: { bg: "#FFF0ED", text: "#E8734A", dot: "#E8734A" },
 };
 
 function daysUntil(dateStr: string): number {
@@ -87,48 +93,6 @@ function daysUntil(dateStr: string): number {
   return Math.ceil((target.getTime() - today.getTime()) / (1000*60*60*24));
 }
 
-interface Restaurant {
-  id: string;
-  name: string;
-  emoji: string;
-  safe: string[];
-  avoid: string[];
-}
-
-const RESTAURANTS: Restaurant[] = [
-  {
-    id: "mos", name: "摩斯漢堡", emoji: "🍔",
-    safe:  ["米漢堡（去洋蔥）", "烤雞", "玉米濃湯", "無糖紅茶"],
-    avoid: ["小麥麵包漢堡", "洋蔥圈", "薯條"],
-  },
-  {
-    id: "mcdonalds", name: "麥當勞", emoji: "🍟",
-    safe:  ["嫩煎雞腿排（不夾麵包）", "沙拉", "無糖紅茶"],
-    avoid: ["漢堡麵包", "薯條", "麥克雞塊（裹粉=小麥）"],
-  },
-  {
-    id: "subway", name: "Subway", emoji: "🥗",
-    safe:  ["沙拉碗（不要麵包）", "雞胸肉（避洋蔥）"],
-    avoid: ["麵包體", "美乃滋"],
-  },
-  {
-    id: "kfc", name: "肯德基", emoji: "🍗",
-    safe:  ["烤雞（如有）", "玉米"],
-    avoid: ["炸雞（裹粉=小麥）", "薯條"],
-  },
-  {
-    id: "convenience", name: "便利商店", emoji: "🏪",
-    safe:  ["茶葉蛋", "即食雞胸肉", "無糖豆漿", "地瓜", "無調味堅果（確認無腰果）", "香蕉", "黑咖啡"],
-    avoid: ["麵包／三明治", "鮪魚飯糰", "含糖飲料", "含腰果堅果包", "炸物"],
-  },
-  {
-    id: "buffet", name: "自助餐", emoji: "🍱",
-    safe:  ["白飯（半碗）", "滷雞腿／滷豬肉", "炒高麗菜／炒菠菜", "滷蛋"],
-    avoid: ["炸排骨（裹粉）", "炒洋蔥", "鮪魚料理"],
-  },
-];
-
-type Mode      = "food" | "restaurant";
 type FilterTab = "all" | FoodStatus;
 
 const FILTER_TABS: { key: FilterTab; label: string }[] = [
@@ -139,28 +103,54 @@ const FILTER_TABS: { key: FilterTab; label: string }[] = [
   { key: "safe",     label: "安全" },
 ];
 
+type AiResult = {
+  verdict: string;
+  risk: string;
+  reason: string;
+  tip: string | null;
+};
+
 function todayLabel(): string {
   const d = new Date();
   return `${d.getMonth()+1}/${d.getDate()}`;
 }
 
 export default function ScanPage() {
-  const [mode,     setMode]     = useState<Mode>("food");
   const [query,    setQuery]    = useState("");
   const [tab,      setTab]      = useState<FilterTab>("all");
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
-
-  function toggleExpand(id: string) {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  }
+  const [aiResult, setAiResult] = useState<AiResult | null>(null);
+  const [aiFood,   setAiFood]   = useState("");
+  const [loading,  setLoading]  = useState(false);
 
   const filtered = FOOD_DATABASE
     .filter((f) => f.name.includes(query) && (tab === "all" || f.status === tab))
     .sort((a, b) => STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status));
+
+  const noDbResult = query.trim().length > 0 && filtered.length === 0;
+
+  async function runAiCheck(food: string) {
+    if (!food.trim() || loading) return;
+    setLoading(true);
+    setAiResult(null);
+    setAiFood(food);
+    try {
+      const res = await fetch("/api/food-check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ food }),
+      });
+      const data = await res.json();
+      setAiResult(data);
+    } catch {
+      setAiResult({ verdict: "小心", risk: "中", reason: "網路錯誤，請重試", tip: null });
+    }
+    setLoading(false);
+  }
+
+  function handleSearch(val: string) {
+    setQuery(val);
+    setAiResult(null);
+  }
 
   return (
     <>
@@ -171,132 +161,130 @@ export default function ScanPage() {
             <h1 className="text-xl font-bold text-[#1a1a1a]">食物安全掃描器</h1>
             <span className="text-xs text-[#8B7D6B]">{todayLabel()}</span>
           </div>
-          <div className="flex gap-2 mb-3">
-            {([["food","食物查詢"],["restaurant","外食模式"]] as [Mode, string][]).map(([m, label]) => (
+          <input
+            type="search"
+            placeholder="搜尋或輸入食物名稱…"
+            value={query}
+            onChange={(e) => handleSearch(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && noDbResult && runAiCheck(query)}
+            className="w-full bg-white rounded-2xl px-4 py-2.5 text-sm outline-none border border-stone-100 focus:border-[#e9f955] transition-colors placeholder:text-[#C4B8AC] mb-2.5"
+          />
+          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+            {FILTER_TABS.map(({ key, label }) => (
               <button
-                key={m}
-                onClick={() => setMode(m as Mode)}
-                className="flex-1 py-1.5 rounded-full text-xs font-semibold transition-colors"
-                style={mode === m
-                  ? { backgroundColor: "#e9f955", color: "#1a1a1a" }
-                  : { backgroundColor: "#fff", color: "#8B7D6B", border: "1px solid #F0EBE4" }}
+                key={key}
+                onClick={() => setTab(key)}
+                className={`shrink-0 text-xs font-medium px-3 py-1 rounded-full transition-colors ${
+                  tab === key ? "bg-[#e9f955] text-[#1a1a1a]" : "bg-transparent text-[#6b6b6b] border border-stone-200"
+                }`}
               >{label}</button>
             ))}
           </div>
-          {mode === "food" && (
-            <>
-              <input
-                type="search"
-                placeholder="搜尋食物名稱…"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                className="w-full bg-white rounded-2xl px-4 py-2.5 text-sm outline-none border border-stone-100 focus:border-[#e9f955] transition-colors placeholder:text-[#C4B8AC] mb-2.5"
-              />
-              <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-                {FILTER_TABS.map(({ key, label }) => (
-                  <button
-                    key={key}
-                    onClick={() => setTab(key)}
-                    className={`shrink-0 text-xs font-medium px-3 py-1 rounded-full transition-colors ${
-                      tab === key ? "bg-[#e9f955] text-[#1a1a1a]" : "bg-transparent text-[#6b6b6b] border border-stone-200"
-                    }`}
-                  >{label}</button>
-                ))}
-              </div>
-            </>
-          )}
         </div>
       </div>
 
-      {/* Content */}
-      {mode === "food" ? (
-        <main className="pt-[204px] pb-24 px-4 w-full max-w-2xl mx-auto">
-          {filtered.length === 0 ? (
-            <p className="text-center text-[#8B7D6B] text-sm pt-12">
-              {query ? `找不到「${query}」` : "此分類目前沒有食物"}
+      <main className="pt-[164px] pb-24 px-4 w-full max-w-2xl mx-auto">
+
+        {/* DB results */}
+        {filtered.length > 0 && (
+          <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-2">
+            {filtered.map((food) => {
+              const cfg  = STATUS_CONFIG[food.status];
+              const days = food.banUntil ? daysUntil(food.banUntil) : null;
+              const infoText =
+                food.status === "banned" && days !== null
+                  ? (days > 0 ? `還剩 ${days} 天` : "停食期已到")
+                  : food.status === "rotation" && food.rotationDays
+                  ? `每 ${food.rotationDays} 天 1 次`
+                  : null;
+              return (
+                <li key={food.name} className="rounded-2xl px-4 py-3 shadow-sm" style={{ backgroundColor: cfg.cardBg }}>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-medium text-[#1A1A1A]">{food.name}</span>
+                    <span className="flex items-center gap-1.5 whitespace-nowrap">
+                      <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: cfg.dot }} />
+                      <span className="text-xs font-medium" style={{ color: cfg.text }}>{cfg.label}</span>
+                    </span>
+                  </div>
+                  {(infoText || food.note) && (
+                    <p className="text-sm text-stone-400 mt-0.5">{infoText ?? food.note}</p>
+                  )}
+                  {infoText && food.note && (
+                    <p className="text-sm text-stone-400 mt-0.5">{food.note}</p>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+
+        {/* Not in DB → AI check */}
+        {noDbResult && (
+          <div className="pt-4 flex flex-col items-center gap-4">
+            <p className="text-sm text-[#8B7D6B] text-center">
+              「{query}」不在資料庫裡
             </p>
-          ) : (
-            <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-2">
-              {filtered.map((food) => {
-                const cfg  = STATUS_CONFIG[food.status];
-                const days = food.banUntil ? daysUntil(food.banUntil) : null;
-                const infoText =
-                  food.status === "banned" && days !== null
-                    ? (days > 0 ? `還剩 ${days} 天` : "停食期已到")
-                    : food.status === "rotation" && food.rotationDays
-                    ? `每 ${food.rotationDays} 天 1 次`
-                    : null;
-                return (
-                  <li key={food.name} className="rounded-2xl px-4 py-3 shadow-sm" style={{ backgroundColor: cfg.cardBg }}>
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-medium text-[#1A1A1A]">{food.name}</span>
-                      <span className="flex items-center gap-1.5 whitespace-nowrap">
-                        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: cfg.dot }} />
-                        <span className="text-xs font-medium" style={{ color: cfg.text }}>{cfg.label}</span>
+
+            {!aiResult && (
+              <button
+                onClick={() => runAiCheck(query)}
+                disabled={loading}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-opacity active:opacity-70"
+                style={{ backgroundColor: "#e9f955", color: "#1a1a1a", opacity: loading ? 0.6 : 1 }}
+              >
+                {loading ? (
+                  <>
+                    <span className="w-4 h-4 rounded-full border-2 border-[#1a1a1a]/20 border-t-[#1a1a1a] animate-spin" />
+                    AI 判斷中…
+                  </>
+                ) : "請 AI 幫我判斷"}
+              </button>
+            )}
+
+            {aiResult && (() => {
+              const cfg = AI_VERDICT_CONFIG[aiResult.verdict] ?? AI_VERDICT_CONFIG["小心"];
+              return (
+                <div className="w-full rounded-2xl px-4 py-4 shadow-sm" style={{ backgroundColor: cfg.bg }}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-semibold text-[#1A1A1A]">{aiFood}</span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: cfg.dot }} />
+                      <span className="text-xs font-semibold" style={{ color: cfg.text }}>
+                        {aiResult.verdict}・風險{aiResult.risk}
                       </span>
-                    </div>
-                    {(infoText || food.note) && (
-                      <p className="text-sm text-stone-400 mt-0.5">{infoText ?? food.note}</p>
-                    )}
-                    {infoText && food.note && (
-                      <p className="text-sm text-stone-400 mt-0.5">{food.note}</p>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </main>
-      ) : (
-        <main className="pt-[116px] pb-24 px-4 w-full max-w-2xl mx-auto flex flex-col gap-2">
-          {RESTAURANTS.map((r) => {
-            const open = expanded.has(r.id);
-            return (
-              <div key={r.id} className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <button
-                  onClick={() => toggleExpand(r.id)}
-                  className="w-full flex items-center justify-between px-4 py-3.5"
-                >
-                  <span className="text-sm font-semibold text-[#1A1A1A]">{r.emoji} {r.name}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-[#8B7D6B]">✅{r.safe.length} 🚫{r.avoid.length}</span>
-                    <span
-                      className="text-[#8B7D6B] text-xs transition-transform inline-block"
-                      style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
-                    >▾</span>
+                    </span>
                   </div>
-                </button>
-                {open && (
-                  <div className="px-4 pb-4 border-t border-stone-50 space-y-3 pt-3">
-                    <div>
-                      <p className="text-[10px] font-semibold text-[#6B9E78] uppercase tracking-wide mb-1.5">可以吃</p>
-                      <ul className="space-y-1">
-                        {r.safe.map((item) => (
-                          <li key={item} className="flex items-start gap-2">
-                            <span className="shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full bg-[#6B9E78]" />
-                            <span className="text-sm text-[#1A1A1A]">{item}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-semibold text-[#E8734A] uppercase tracking-wide mb-1.5">避開</p>
-                      <ul className="space-y-1">
-                        {r.avoid.map((item) => (
-                          <li key={item} className="flex items-start gap-2">
-                            <span className="shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full bg-[#E8734A]" />
-                            <span className="text-sm text-[#8B7D6B]">{item}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                  <p className="text-sm text-[#1a1a1a] leading-relaxed">{aiResult.reason}</p>
+                  {aiResult.tip && (
+                    <p className="text-xs text-[#8B7D6B] mt-1.5">{aiResult.tip}</p>
+                  )}
+                  <div className="flex items-center gap-1 mt-3">
+                    <span className="text-[9px] text-[#C4B8AC]">由 AI 根據個人過敏原資料判斷，僅供參考</span>
                   </div>
-                )}
-              </div>
-            );
-          })}
-        </main>
-      )}
+                  <button
+                    onClick={() => runAiCheck(query)}
+                    disabled={loading}
+                    className="mt-2 text-xs text-[#8B7D6B]/70 underline"
+                  >重新判斷</button>
+                </div>
+              );
+            })()}
+          </div>
+        )}
+
+        {/* Empty state when no query */}
+        {query.trim() === "" && tab === "all" && (
+          <p className="text-center text-[#8B7D6B] text-xs pt-6">
+            輸入食物名稱查詢，不在資料庫可請 AI 判斷
+          </p>
+        )}
+
+        {/* Empty state when filter but no results in DB */}
+        {query.trim() === "" && tab !== "all" && filtered.length === 0 && (
+          <p className="text-center text-[#8B7D6B] text-sm pt-12">此分類目前沒有食物</p>
+        )}
+
+      </main>
 
       <BottomNav />
     </>
