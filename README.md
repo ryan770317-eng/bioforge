@@ -1,36 +1,25 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 體態計畫
 
-## Getting Started
+Ryan 的個人減重 PWA。69.8 → 62–64 kg，一天一張照片就好。
 
-First, run the development server:
+以行為科學實證設計：記錄天數是最強預測因子（Hollis 2008）、拍照取代查熱量、
+可寬恕 streak（週 5/7 制）、晚餐預決定（implementation intentions）、嘴饞 SOS、
+週報問責分享卡（Wing 1999）。規劃書見 `減重計畫_規劃書_handoff.md`。
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 架構
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Next.js 16 App Router + Tailwind 4 + Supabase（`events` 單表 + `user_settings` 鍵值）+ Vercel
+- AI 餐點估算：照片 → Claude（`/api/meal`）→ 熱量/蛋白質/紅綠燈/地雷
+- 推播：Web Push（VAPID）；GitHub Actions 每 15 分打 `/api/push/dispatch`，Vercel cron 備援
+- Apple Watch / 藍牙體重計：iOS 捷徑自動化 → `/api/sync?key=SYNC_SECRET`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 首次設定
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. `supabase-setup.sql` 貼到 Supabase SQL Editor 執行
+2. App 內「更多」→ 開啟推播（iPhone 要先加入主畫面）
+3. 「更多」→ 捷徑教學，設定每晚自動同步
 
-## Learn More
+## 環境變數
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `ANTHROPIC_API_KEY` /
+`NEXT_PUBLIC_VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `CRON_SECRET` / `SYNC_SECRET`
