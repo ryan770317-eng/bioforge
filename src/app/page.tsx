@@ -128,16 +128,23 @@ export default function TodayPage() {
   }
 
   return (
-    <main className="space-y-4">
+    <main className="stagger space-y-4">
       {/* 標頭 */}
       <header className="flex items-end justify-between pt-2">
         <div>
-          <div className="text-xs text-muted">第 {dayN(today)} 天・{phase.name}</div>
-          <h1 className="font-display text-2xl font-bold text-green">今天</h1>
+          <div className="hud-label flex items-center gap-2">
+            <span className="live-dot" />
+            DAY {String(dayN(today)).padStart(3, "0")} · {phase.name}
+          </div>
+          <h1 className="font-display glow mt-1 text-3xl font-bold text-green">今天</h1>
         </div>
-        <div className="text-right text-xs text-muted">
-          <div>本週記錄 <span className="font-display text-base font-bold text-green">{week.done}</span>/{week.target} 天</div>
-          <div>本月累計 {month} 天</div>
+        <div className="text-right">
+          <div className="hud-label">WEEK LOG</div>
+          <div className="font-display text-xl font-bold leading-tight">
+            <span className="glow text-green">{week.done}</span>
+            <span className="text-muted">/{week.target}</span>
+          </div>
+          <div className="text-[10px] text-muted">本月累計 {month} 天</div>
         </div>
       </header>
 
@@ -158,25 +165,31 @@ export default function TodayPage() {
       <button
         onClick={() => fileRef.current?.click()}
         disabled={analyzing}
-        className="card flex w-full items-center gap-4 p-5 text-left active:scale-[0.99] disabled:opacity-70"
+        className="card brackets relative flex w-full items-center gap-4 p-5 text-left transition-transform active:scale-[0.98] disabled:opacity-80"
       >
-        <div className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full ${analyzing ? "bg-card-soft" : "bg-green"}`}>
+        {analyzing && <span className="scan-sweep" />}
+        <div
+          className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full ${
+            analyzing ? "border border-line bg-card-soft" : "cam-breath bg-green"
+          }`}
+        >
           {analyzing ? (
             <div className="h-7 w-7 animate-spin rounded-full border-[3px] border-green border-t-transparent" />
           ) : (
-            <svg viewBox="0 0 24 24" className="h-8 w-8 text-card" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <svg viewBox="0 0 24 24" className="h-8 w-8 text-[#06120c]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <path d="M4 8h3l2-3h6l2 3h3v11H4z" /><circle cx="12" cy="13" r="3.5" />
             </svg>
           )}
         </div>
         <div>
+          <div className="hud-label">{analyzing ? "ANALYZING…" : "MEAL CAPTURE"}</div>
           <div className="font-display text-lg font-bold">{analyzing ? ANALYZING_LINES[analyzeLine] : "拍這一餐"}</div>
           <div className="text-xs text-muted">{analyzing ? "AI 分析中，約 10 秒" : "按快門就完成記錄，熱量蛋白質 AI 估"}</div>
         </div>
       </button>
 
       {/* 今日數字 */}
-      <div className="card grid grid-cols-3 divide-x divide-[#eee5d2] p-0 text-center">
+      <div className="card grid grid-cols-3 divide-x divide-line p-0 text-center">
         <button onClick={() => { setEditWeight(true); setWeightInput(String(todayWeight?.kg ?? lastWeight ?? "")); }} className="py-4">
           <div className="font-display text-xl font-bold">{todayWeight?.kg ?? "—"}</div>
           <div className="text-[11px] text-muted">體重 kg{!todayWeight && "（點我記）"}</div>
@@ -196,23 +209,23 @@ export default function TodayPage() {
           <input
             type="number" inputMode="decimal" step="0.1" autoFocus value={weightInput}
             onChange={(e) => setWeightInput(e.target.value)}
-            className="w-28 rounded-xl border border-[#e0d6c2] bg-bg px-3 py-2 font-display text-xl font-bold outline-none"
+            className="w-28 rounded-xl border border-line bg-black/40 px-3 py-2 font-display text-xl font-bold text-green outline-none focus:border-green/50"
           />
           <span className="text-sm text-muted">kg</span>
-          <button onClick={saveWeight} className="ml-auto rounded-xl bg-green px-5 py-2 text-sm font-bold text-card">存</button>
+          <button onClick={saveWeight} className="glow-box ml-auto rounded-xl bg-green px-5 py-2 text-sm font-bold text-[#06120c]">存</button>
           <button onClick={() => setEditWeight(false)} className="text-sm text-muted">取消</button>
         </div>
       )}
 
       {/* 熱量列（階段1 淡化處理）*/}
       <div className="card p-4">
-        <div className="mb-2 flex items-baseline justify-between text-sm">
-          <span className="text-muted">今日熱量（估）</span>
+        <div className="mb-2 flex items-baseline justify-between">
+          <span className="hud-label">ENERGY INTAKE</span>
           <span className="font-display font-bold">{kcalSum}<span className="text-xs text-muted"> / {kcalGoal} kcal</span></span>
         </div>
-        <div className="h-2.5 overflow-hidden rounded-full bg-card-soft">
+        <div className="bar-track">
           <div
-            className={`h-full rounded-full transition-all ${kcalSum > kcalGoal ? "bg-warn" : "bg-green"}`}
+            className={`bar-fill ${kcalSum > kcalGoal ? "bar-fill--warn" : ""}`}
             style={{ width: `${Math.min(100, (kcalSum / kcalGoal) * 100)}%` }}
           />
         </div>
@@ -231,15 +244,16 @@ export default function TodayPage() {
       </Link>
 
       {/* SOS */}
-      <Link href="/sos" className="card block bg-terra p-4 text-center">
-        <div className="font-display text-lg font-bold text-card">嘴饞 SOS</div>
-        <div className="text-[11px] text-terra-soft">想吃東西的時候按這裡，給我 10 分鐘</div>
+      <Link href="/sos" className="card glow-terra block border-terra/60 bg-gradient-to-r from-terra/25 to-terra/10 p-4 text-center">
+        <div className="hud-label !text-terra">CRAVING ALERT</div>
+        <div className="font-display text-lg font-bold text-terra">嘴饞 SOS</div>
+        <div className="text-[11px] text-muted">想吃東西的時候按這裡，給我 10 分鐘</div>
       </Link>
 
       {/* 今日餐點 */}
       {meals.length > 0 && (
         <section className="space-y-2.5">
-          <h2 className="px-1 text-xs font-bold text-muted">今天吃了</h2>
+          <h2 className="hud-label px-1">MEAL LOG · 今天吃了</h2>
           {[...meals].reverse().map((m) => {
             const r = RATING[(m.data.rating as keyof typeof RATING) ?? "yellow"] ?? RATING.yellow;
             return (
@@ -273,12 +287,12 @@ export default function TodayPage() {
 
       {/* 保健品 */}
       <section className="card space-y-1 p-4">
-        <h2 className="mb-2 text-xs font-bold text-muted">保健品</h2>
+        <h2 className="hud-label mb-2">SUPPLEMENTS · 保健品</h2>
         {SUPPLEMENT_SLOTS.map((s) => {
           const done = takenSlots.has(s.id);
           return (
             <button key={s.id} onClick={() => toggleSupplement(s.id)} className="flex w-full items-center gap-3 py-1.5 text-left">
-              <span className={`flex h-6 w-6 items-center justify-center rounded-lg border-2 text-xs font-bold ${done ? "border-green bg-green text-card" : "border-[#d8cdb6] text-transparent"}`}>✓</span>
+              <span className={`flex h-6 w-6 items-center justify-center rounded-lg border-2 text-xs font-bold transition-all ${done ? "glow-box border-green bg-green text-[#06120c]" : "border-line text-transparent"}`}>✓</span>
               <span className={`text-sm ${done ? "text-muted line-through" : ""}`}>{s.label}</span>
               <span className="ml-auto text-[10px] text-muted">{s.note}</span>
             </button>

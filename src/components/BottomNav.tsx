@@ -35,7 +35,7 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 border-t border-[#e6dcc8] bg-card/95 backdrop-blur"
+      className="fixed bottom-0 left-0 right-0 z-40 border-t border-line bg-[#0a0f0d]/90 backdrop-blur-md"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <div className="mx-auto flex max-w-md">
@@ -46,13 +46,16 @@ export default function BottomNav() {
             <Link
               key={t.href}
               href={t.href}
-              className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] ${
+              className={`relative flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] tracking-widest transition-colors ${
                 active ? "text-green font-bold" : "text-muted"
               }`}
             >
+              {active && (
+                <span className="absolute top-0 h-0.5 w-8 rounded-full bg-green shadow-[0_0_8px_rgba(43,255,168,0.8)]" />
+              )}
               <svg
                 viewBox="0 0 24 24"
-                className="h-6 w-6"
+                className={`h-6 w-6 ${active ? "drop-shadow-[0_0_6px_rgba(43,255,168,0.7)]" : ""}`}
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={active ? 2.4 : 1.8}

@@ -49,11 +49,12 @@ export default function PlanPage() {
   }
 
   return (
-    <main className="space-y-4">
+    <main className="stagger space-y-4">
       <header className="pt-2">
-        <h1 className="font-display text-2xl font-bold text-green">計畫</h1>
-        <p className="text-xs text-muted">
-          第 {dayN(today)} 天・{PROFILE.startWeightKg} → {PROFILE.targetLow}–{PROFILE.targetHigh} kg・約 14–18 週
+        <div className="hud-label">MISSION ROADMAP</div>
+        <h1 className="font-display glow mt-1 text-3xl font-bold text-green">計畫</h1>
+        <p className="font-mono text-xs text-muted">
+          DAY {String(dayN(today)).padStart(3, "0")} · {PROFILE.startWeightKg} → {PROFILE.targetLow}–{PROFILE.targetHigh} KG · 14–18 WK
         </p>
       </header>
 
@@ -61,7 +62,8 @@ export default function PlanPage() {
       <div className={`card p-4 ${breadUsed > PROFILE.breadQuotaPerWeek ? "border border-warn/50" : ""}`}>
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-bold">🍞 本週麵包/甜點額度</h2>
+            <h2 className="hud-label !text-gold">BREAD QUOTA</h2>
+            <h3 className="text-sm font-bold">本週麵包/甜點額度</h3>
             <p className="mt-0.5 text-[11px] text-muted">
               計畫內的放縱不是破功。事先想好哪餐吃、配蛋白質一起吃。
             </p>
@@ -98,7 +100,7 @@ export default function PlanPage() {
 
       {/* 五階段 */}
       <section className="card space-y-0 p-4">
-        <h2 className="mb-3 text-xs font-bold text-muted">五階段路線圖</h2>
+        <h2 className="hud-label mb-3">PHASE MAP · 五階段路線圖</h2>
         {PHASES.map((p) => {
           const active = p.id === phaseId;
           const done = p.id < phaseId;
@@ -107,7 +109,7 @@ export default function PlanPage() {
               <div className="flex flex-col items-center">
                 <div
                   className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                    active ? "bg-green text-card" : done ? "bg-green-soft text-green" : "bg-card-soft text-muted"
+                    active ? "bg-green text-[#06120c] glow-box" : done ? "bg-green-soft text-green" : "bg-card-soft text-muted"
                   }`}
                 >
                   {done ? "✓" : p.id}
@@ -117,7 +119,7 @@ export default function PlanPage() {
               <div className={`pb-4 ${active ? "" : "opacity-60"}`}>
                 <div className="text-sm font-bold">
                   {p.name} <span className="text-[10px] font-normal text-muted">{p.range}</span>
-                  {active && <span className="ml-1 rounded-full bg-green px-2 py-0.5 text-[10px] text-card">現在</span>}
+                  {active && <span className="ml-1 rounded-full bg-green px-2 py-0.5 text-[10px] font-bold text-[#06120c]">現在</span>}
                 </div>
                 <p className="mt-0.5 text-xs leading-relaxed text-muted">{p.focus}</p>
               </div>
@@ -128,7 +130,7 @@ export default function PlanPage() {
 
       {/* 飲食原則 */}
       <section className="card space-y-3 p-4">
-        <h2 className="text-xs font-bold text-muted">飲食原則</h2>
+        <h2 className="hud-label">DIET PROTOCOL · 飲食原則</h2>
         {PRINCIPLES.map((p) => (
           <div key={p.t}>
             <div className="text-sm font-bold">{p.t}</div>

@@ -46,9 +46,10 @@ export default function DinnerPage() {
   }
 
   return (
-    <main className="space-y-4">
+    <main className="stagger space-y-4">
       <header className="pt-2">
-        <h1 className="font-display text-2xl font-bold text-green">今晚晚餐</h1>
+        <div className="hud-label">PRE-COMMIT · 16:30</div>
+        <h1 className="font-display glow mt-1 text-3xl font-bold text-green">今晚晚餐</h1>
         <p className="mt-1 text-sm text-muted">
           現在不餓、頭腦清楚，最適合做決定。晚上壓力大的時候，照著選好的走就行。
         </p>
@@ -79,9 +80,9 @@ export default function DinnerPage() {
               value={custom}
               onChange={(e) => setCustom(e.target.value)}
               placeholder="今天想吃別的？打在這"
-              className="min-w-0 flex-1 rounded-xl bg-bg px-3 py-2 text-sm outline-none"
+              className="min-w-0 flex-1 rounded-xl border border-line bg-black/30 px-3 py-2 text-sm outline-none focus:border-green/50"
             />
-            <button onClick={() => choose(custom)} className="rounded-xl bg-green px-4 py-2 text-sm font-bold text-card">
+            <button onClick={() => choose(custom)} className="rounded-xl glow-box bg-green px-4 py-2 text-sm font-bold text-[#06120c]">
               就這個
             </button>
           </div>
@@ -107,7 +108,7 @@ export default function DinnerPage() {
           ))}
           <div className="flex gap-2">
             <button onClick={() => setDraft([...draft, ""])} className="card flex-1 p-3 text-sm text-muted">+ 新增</button>
-            <button onClick={savePresets} className="card flex-1 bg-green p-3 text-sm font-bold text-card">儲存</button>
+            <button onClick={savePresets} className="card flex-1 bg-green p-3 text-sm font-bold text-[#06120c]">儲存</button>
           </div>
         </section>
       )}

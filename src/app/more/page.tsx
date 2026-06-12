@@ -31,7 +31,7 @@ function Section({
         <span className="text-sm font-bold">{title}</span>
         <span className={`text-muted transition-transform ${open === id ? "rotate-90" : ""}`}>›</span>
       </button>
-      {open === id && <div className="border-t border-[#eee5d2] p-4 pt-3">{children}</div>}
+      {open === id && <div className="border-t border-line p-4 pt-3">{children}</div>}
     </section>
   );
 }
@@ -76,9 +76,10 @@ export default function MorePage() {
   }
 
   return (
-    <main className="space-y-4">
+    <main className="stagger space-y-4">
       <header className="pt-2">
-        <h1 className="font-display text-2xl font-bold text-green">更多</h1>
+        <div className="hud-label">SYSTEM CONFIG</div>
+        <h1 className="font-display glow mt-1 text-3xl font-bold text-green">更多</h1>
       </header>
 
       {/* 推播 */}
@@ -92,14 +93,14 @@ export default function MorePage() {
           </div>
           <button
             onClick={togglePush}
-            className={`rounded-xl px-4 py-2 text-sm font-bold ${subscribed ? "bg-card-soft text-muted" : "bg-green text-card"}`}
+            className={`rounded-xl px-4 py-2 text-sm font-bold ${subscribed ? "bg-card-soft text-muted" : "glow-box bg-green text-[#06120c]"}`}
           >
             {subscribed ? "關閉" : "開啟"}
           </button>
         </div>
         {pushMsg && <p className="mt-2 text-[11px] text-bad">{pushMsg}</p>}
 
-        <div className="mt-3 space-y-2 border-t border-[#eee5d2] pt-3">
+        <div className="mt-3 space-y-2 border-t border-line pt-3">
           {PUSH_RULES.map((r) => {
             const enabled = prefs[r.type]?.enabled ?? r.enabled;
             const time = prefs[r.type]?.time ?? r.time;
@@ -109,14 +110,14 @@ export default function MorePage() {
                   onClick={() => updateRule(r.type, { enabled: !enabled })}
                   className={`h-6 w-11 rounded-full p-0.5 transition-colors ${enabled ? "bg-green" : "bg-card-soft"}`}
                 >
-                  <div className={`h-5 w-5 rounded-full bg-card transition-transform ${enabled ? "translate-x-5" : ""}`} />
+                  <div className={`h-5 w-5 rounded-full transition-transform ${enabled ? "translate-x-5 bg-[#06120c]" : "bg-muted/60"}`} />
                 </button>
                 <span className={enabled ? "" : "text-muted"}>{r.label}</span>
                 <input
                   type="time"
                   value={time}
                   onChange={(e) => updateRule(r.type, { time: e.target.value })}
-                  className="ml-auto rounded-lg bg-bg px-2 py-1 text-xs text-muted"
+                  className="ml-auto rounded-lg border border-line bg-black/30 px-2 py-1 font-mono text-xs text-muted"
                   disabled={r.type === "weekly" && false}
                 />
               </div>
@@ -150,11 +151,11 @@ export default function MorePage() {
             <li>iPhone 開「捷徑」App → 新增捷徑</li>
             <li>加入動作「尋找健康樣本」：類型=步數、今天、合併=總和</li>
             <li>再加「尋找健康樣本」：類型=體重、最新 1 筆（買了藍牙體重計後會自動有值）</li>
-            <li>加入動作「取得 URL 內容」：方法 POST、JSON，內容：<code className="rounded bg-bg px-1 text-xs">steps</code>=步數結果、<code className="rounded bg-bg px-1 text-xs">weightKg</code>=體重結果</li>
+            <li>加入動作「取得 URL 內容」：方法 POST、JSON，內容：<code className="rounded border border-line bg-black/30 px-1 font-mono text-xs text-green">steps</code>=步數結果、<code className="rounded border border-line bg-black/30 px-1 font-mono text-xs text-green">weightKg</code>=體重結果</li>
             <li>
               URL 填：
               {syncUrl ? (
-                <button onClick={() => copy(syncUrl, "url")} className="mt-1 block w-full truncate rounded-lg bg-bg p-2 text-left text-[11px]">
+                <button onClick={() => copy(syncUrl, "url")} className="mt-1 block w-full truncate rounded-lg border border-line bg-black/30 p-2 text-left font-mono text-[11px] text-green">
                   {copied === "url" ? "已複製 ✓" : syncUrl}
                 </button>
               ) : (

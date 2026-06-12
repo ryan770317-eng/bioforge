@@ -8,13 +8,18 @@ export type Ev<T = Record<string, unknown>> = {
   data: T;
 };
 
+/** Supabase 的 PostgrestError 是普通物件，包成 Error 才不會顯示成 [object Object] */
+function wrap(error: { message?: string } | null): Error {
+  return new Error(error?.message ?? "資料庫錯誤");
+}
+
 export async function addEvent(type: string, date: string, data: Record<string, unknown>) {
   const { data: row, error } = await supabase
     .from("events")
     .insert({ type, date, data })
     .select()
     .single();
-  if (error) throw error;
+  if (error) throw wrap(error);
   return row as Ev;
 }
 
@@ -28,7 +33,7 @@ export async function upsertDaily(type: string, date: string, data: Record<strin
     .limit(1);
   if (existing?.length) {
     const { error } = await supabase.from("events").update({ data }).eq("id", existing[0].id);
-    if (error) throw error;
+    if (error) throw wrap(error);
     return existing[0].id as number;
   }
   const row = await addEvent(type, date, data);
@@ -45,13 +50,13 @@ export async function listEvents(type: string | string[], from: string, to: stri
   const { data, error } = Array.isArray(type)
     ? await q.in("type", type)
     : await q.eq("type", type);
-  if (error) throw error;
+  if (error) throw wrap(error);
   return (data ?? []) as Ev[];
 }
 
 export async function deleteEvent(id: number) {
   const { error } = await supabase.from("events").delete().eq("id", id);
-  if (error) throw error;
+  if (error) throw wrap(error);
 }
 
 // ── user_settings 鍵值（沿用舊表）───────────────────────────
@@ -70,7 +75,7 @@ export async function setSetting(key: string, value: unknown) {
   const { error } = await supabase
     .from("user_settings")
     .upsert({ key, value: typeof value === "string" ? value : JSON.stringify(value) }, { onConflict: "key" });
-  if (error) throw error;
+  if (error) throw wrap(error);
 }
 
 /** events 表還沒建好時給頁面顯示提示用 */

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Noto_Sans_TC, Noto_Serif_TC, Fraunces } from "next/font/google";
+import { Noto_Sans_TC, Chakra_Petch, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import SwRegister from "@/components/SwRegister";
 import BottomNav from "@/components/BottomNav";
@@ -10,16 +10,16 @@ const notoSansTC = Noto_Sans_TC({
   weight: ["400", "500", "700", "900"],
 });
 
-const notoSerifTC = Noto_Serif_TC({
-  variable: "--font-noto-serif-tc",
+const chakra = Chakra_Petch({
+  variable: "--font-chakra",
   subsets: ["latin"],
-  weight: ["600", "900"],
+  weight: ["500", "600", "700"],
 });
 
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
+const jbMono = JetBrains_Mono({
+  variable: "--font-jbmono",
   subsets: ["latin"],
-  weight: ["500", "700"],
+  weight: ["400", "700"],
 });
 
 export const metadata: Metadata = {
@@ -28,13 +28,13 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "體態計畫",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f5efe3",
+  themeColor: "#07090b",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -47,7 +47,7 @@ export default function RootLayout({
   return (
     <html
       lang="zh-TW"
-      className={`${notoSansTC.variable} ${notoSerifTC.variable} ${fraunces.variable} h-full antialiased`}
+      className={`${notoSansTC.variable} ${chakra.variable} ${jbMono.variable} h-full antialiased`}
     >
       <body className="min-h-full">
         <SwRegister />

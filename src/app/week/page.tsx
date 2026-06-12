@@ -85,24 +85,37 @@ export default function WeekPage() {
       canvas.width = 720; canvas.height = 900;
       const ctx = canvas.getContext("2d")!;
 
-      ctx.fillStyle = "#f5efe3"; ctx.fillRect(0, 0, 720, 900);
-      ctx.fillStyle = "#1d4a38";
-      ctx.font = "bold 40px 'Noto Sans TC', sans-serif";
-      ctx.fillText("體態計畫・週報", 56, 96);
-      ctx.fillStyle = "#8b8273";
-      ctx.font = "26px 'Noto Sans TC', sans-serif";
-      ctx.fillText(`${week[0].slice(5).replace("-", "/")} – ${week[6].slice(5).replace("-", "/")}`, 56, 140);
+      // 底：近黑 + 細格線
+      ctx.fillStyle = "#07090b"; ctx.fillRect(0, 0, 720, 900);
+      ctx.strokeStyle = "rgba(120,255,190,0.05)"; ctx.lineWidth = 1;
+      for (let gx = 0; gx <= 720; gx += 36) { ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, 900); ctx.stroke(); }
+      for (let gy = 0; gy <= 900; gy += 36) { ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(720, gy); ctx.stroke(); }
 
-      ctx.fillStyle = "#fffcf5";
-      roundRect(ctx, 56, 180, 608, 240, 24); ctx.fill();
-      ctx.fillStyle = "#8b8273"; ctx.font = "24px 'Noto Sans TC'";
-      ctx.fillText("週均體重", 96, 240);
-      ctx.fillStyle = "#1d4a38"; ctx.font = "bold 96px Georgia, serif";
-      ctx.fillText(curAvg ? `${curAvg}` : "—", 96, 348);
+      ctx.fillStyle = "#5f7569";
+      ctx.font = "700 20px 'JetBrains Mono', monospace";
+      ctx.fillText("WEEKLY REPORT", 56, 72);
+      ctx.fillStyle = "#2bffa8";
+      ctx.font = "bold 44px 'Chakra Petch', 'Noto Sans TC', sans-serif";
+      ctx.fillText("體態計畫・週報", 56, 120);
+      ctx.fillStyle = "#5f7569";
+      ctx.font = "24px 'JetBrains Mono', monospace";
+      ctx.fillText(`${week[0].slice(5).replace("-", "/")} – ${week[6].slice(5).replace("-", "/")}`, 56, 156);
+
+      // 主面板
+      ctx.fillStyle = "#0e1413";
+      roundRect(ctx, 56, 190, 608, 240, 14); ctx.fill();
+      ctx.strokeStyle = "rgba(120,255,190,0.25)"; ctx.lineWidth = 1.5;
+      roundRect(ctx, 56, 190, 608, 240, 14); ctx.stroke();
+      ctx.fillStyle = "#5f7569"; ctx.font = "22px 'Noto Sans TC'";
+      ctx.fillText("週均體重 WEEK AVG", 96, 246);
+      ctx.shadowColor = "rgba(43,255,168,0.7)"; ctx.shadowBlur = 28;
+      ctx.fillStyle = "#2bffa8"; ctx.font = "bold 104px 'Chakra Petch', sans-serif";
+      ctx.fillText(curAvg ? `${curAvg}` : "—", 96, 364);
+      ctx.shadowBlur = 0;
       if (rate !== null) {
-        ctx.fillStyle = rate < 0 ? "#4a7c59" : "#c79a3d";
-        ctx.font = "bold 32px 'Noto Sans TC'";
-        ctx.fillText(`${rate > 0 ? "+" : ""}${rate.toFixed(2)}% vs 上週`, 340, 348);
+        ctx.fillStyle = rate < 0 ? "#2bffa8" : "#ffc24b";
+        ctx.font = "bold 30px 'Chakra Petch', sans-serif";
+        ctx.fillText(`${rate > 0 ? "+" : ""}${rate.toFixed(2)}% vs 上週`, 360, 364);
       }
 
       const rows: [string, string][] = [
@@ -113,15 +126,17 @@ export default function WeekPage() {
         ["麵包額度", `${breadUsed} / ${PROFILE.breadQuotaPerWeek}`],
       ];
       rows.forEach(([label, val], i) => {
-        const y = 480 + i * 64;
-        ctx.fillStyle = "#8b8273"; ctx.font = "26px 'Noto Sans TC'";
+        const y = 500 + i * 64;
+        ctx.strokeStyle = "rgba(120,255,190,0.1)";
+        ctx.beginPath(); ctx.moveTo(56, y + 18); ctx.lineTo(664, y + 18); ctx.stroke();
+        ctx.fillStyle = "#5f7569"; ctx.font = "26px 'Noto Sans TC'";
         ctx.fillText(label, 56, y);
-        ctx.fillStyle = "#2a2722"; ctx.font = "bold 28px 'Noto Sans TC'";
+        ctx.fillStyle = "#e9f6ee"; ctx.font = "bold 28px 'Chakra Petch', 'Noto Sans TC', sans-serif";
         ctx.fillText(val, 480, y);
       });
 
-      ctx.fillStyle = "#8b8273"; ctx.font = "22px 'Noto Sans TC'";
-      ctx.fillText(`${PROFILE.startWeightKg} → ${PROFILE.targetLow}–${PROFILE.targetHigh} kg 路上`, 56, 850);
+      ctx.fillStyle = "#2bffa8"; ctx.font = "700 20px 'JetBrains Mono', monospace";
+      ctx.fillText(`${PROFILE.startWeightKg} -> ${PROFILE.targetLow}-${PROFILE.targetHigh} KG · IN PROGRESS`, 56, 856);
 
       const blob: Blob = await new Promise((res) => canvas.toBlob((b) => res(b!), "image/png"));
       const file = new File([blob], `週報_${week[0]}.png`, { type: "image/png" });
@@ -140,11 +155,12 @@ export default function WeekPage() {
   }
 
   return (
-    <main className="space-y-4">
+    <main className="stagger space-y-4">
       <header className="flex items-end justify-between pt-2">
         <div>
-          <h1 className="font-display text-2xl font-bold text-green">週報</h1>
-          <p className="text-xs text-muted">{week[0].slice(5)} – {week[6].slice(5)}</p>
+          <div className="hud-label">WEEKLY REPORT</div>
+          <h1 className="font-display glow mt-1 text-3xl font-bold text-green">週報</h1>
+          <p className="font-mono text-xs text-muted">{week[0].slice(5)} – {week[6].slice(5)}</p>
         </div>
         <div className="flex gap-1">
           <button onClick={() => setOffset(offset + 1)} className="rounded-full bg-card-soft px-3 py-1 text-xs">‹ 前週</button>
@@ -152,9 +168,9 @@ export default function WeekPage() {
         </div>
       </header>
 
-      <div className="card p-5 text-center">
-        <div className="text-xs text-muted">週均體重</div>
-        <div className="font-display text-5xl font-bold text-green">{curAvg ?? "—"}</div>
+      <div className="card brackets p-5 text-center">
+        <div className="hud-label">WEEK AVG · 週均體重</div>
+        <div className="font-display glow text-5xl font-bold text-green">{curAvg ?? "—"}</div>
         {rate !== null && (
           <div className={`mt-1 text-sm font-bold ${rate < 0 ? "text-ok" : "text-warn"}`}>
             {rate > 0 ? "+" : ""}{rate.toFixed(2)}% vs 上週（{prevAvg}）
@@ -162,7 +178,7 @@ export default function WeekPage() {
         )}
       </div>
 
-      <div className="card divide-y divide-[#eee5d2] p-4 text-sm [&>div]:flex [&>div]:justify-between [&>div]:py-2">
+      <div className="card divide-y divide-line p-4 text-sm [&>div]:flex [&>div]:justify-between [&>div]:py-2">
         <div><span className="text-muted">記錄天數</span><span className="font-display font-bold">{loggedDays} / 7</span></div>
         <div><span className="text-muted">蛋白質達標（≥85%）</span><span className="font-display font-bold">{protDays} 天</span></div>
         <div><span className="text-muted">平均步數</span><span className="font-display font-bold">{stepsAvg?.toLocaleString() ?? "—"}</span></div>
@@ -178,7 +194,7 @@ export default function WeekPage() {
       <button
         onClick={shareCard}
         disabled={sharing}
-        className="card w-full bg-green p-4 text-center font-display text-lg font-bold text-card active:scale-[0.99] disabled:opacity-60"
+        className="card w-full glow-box bg-green p-4 text-center font-display text-lg font-bold text-[#06120c] active:scale-[0.99] disabled:opacity-60"
       >
         {sharing ? "產生中…" : "分享週報卡 →"}
       </button>

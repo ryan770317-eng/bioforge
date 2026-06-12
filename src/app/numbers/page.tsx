@@ -65,9 +65,10 @@ export default function NumbersPage() {
   if (loading) return <div className="py-20 text-center text-muted animate-pulse-soft">載入中…</div>;
 
   return (
-    <main className="space-y-4">
+    <main className="stagger space-y-4">
       <header className="pt-2">
-        <h1 className="font-display text-2xl font-bold text-green">數字</h1>
+        <div className="hud-label flex items-center gap-2"><span className="live-dot" />BIOMETRIC TELEMETRY</div>
+        <h1 className="font-display glow mt-1 text-3xl font-bold text-green">數字</h1>
         <p className="text-xs text-muted">看趨勢，不看單日。水分一天能晃 1 公斤，七日均線才是真的。</p>
       </header>
 
@@ -76,9 +77,9 @@ export default function NumbersPage() {
       )}
 
       {/* 主數字 */}
-      <div className="card grid grid-cols-3 divide-x divide-[#eee5d2] py-4 text-center">
+      <div className="card brackets grid grid-cols-3 divide-x divide-line py-4 text-center">
         <div>
-          <div className="font-display text-2xl font-bold text-green">{w7}</div>
+          <div className="font-display glow text-2xl font-bold text-green">{w7}</div>
           <div className="text-[11px] text-muted">七日均重</div>
         </div>
         <div>
@@ -94,13 +95,13 @@ export default function NumbersPage() {
       {/* 圖表 */}
       <div className="card p-4">
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-xs font-bold text-muted">體重趨勢</h2>
+          <h2 className="hud-label">WEIGHT TREND</h2>
           <div className="flex gap-1">
             {[30, 90].map((d) => (
               <button
                 key={d}
                 onClick={() => setDays(d)}
-                className={`rounded-full px-3 py-1 text-[11px] ${days === d ? "bg-green font-bold text-card" : "bg-card-soft text-muted"}`}
+                className={`rounded-full px-3 py-1 text-[11px] ${days === d ? "bg-green font-bold text-[#06120c] glow-box" : "bg-card-soft text-muted"}`}
               >
                 {d}天
               </button>
@@ -118,7 +119,7 @@ export default function NumbersPage() {
 
       {/* TDEE 卡（自動隨體重重算）*/}
       <div className="card space-y-2 p-4 text-sm">
-        <h2 className="text-xs font-bold text-muted">能量目標（隨七日均重自動重算）</h2>
+        <h2 className="hud-label">ENERGY TARGET · 隨七日均重自動重算</h2>
         <div className="flex justify-between"><span className="text-muted">基礎代謝 BMR</span><span className="font-display font-bold">{bmr(w7)} kcal</span></div>
         <div className="flex justify-between"><span className="text-muted">TDEE（×{PROFILE.activityFactor}）</span><span className="font-display font-bold">{tdee(w7)} kcal</span></div>
         <div className="flex justify-between text-green"><span>目標熱量（−{PROFILE.deficitKcal}）</span><span className="font-display font-bold">{targetKcal(w7)} kcal</span></div>
@@ -132,7 +133,7 @@ export default function NumbersPage() {
       {/* 步數 */}
       <div className="card flex items-center justify-between p-4">
         <div>
-          <div className="text-xs font-bold text-muted">近 14 天平均步數</div>
+          <div className="hud-label">STEPS · 14D AVG</div>
           <div className="text-[11px] text-muted">Apple Watch 自動同步</div>
         </div>
         <div className="font-display text-2xl font-bold">{stepsAvg?.toLocaleString() ?? "—"}</div>
@@ -140,7 +141,7 @@ export default function NumbersPage() {
 
       {/* 嘴饞 pattern */}
       <div className="card p-4">
-        <h2 className="mb-2 text-xs font-bold text-muted">嘴饞分析（30 天）</h2>
+        <h2 className="hud-label mb-2">CRAVING PATTERN · 30D</h2>
         {cravings.length === 0 ? (
           <p className="text-sm text-muted">還沒有 SOS 記錄。嘴饞時按下 SOS，這裡會浮現你的規律。</p>
         ) : (
